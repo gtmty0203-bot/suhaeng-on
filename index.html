@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>수행ON — 수행평가 캘린더</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:#f5f8ff;color:#17233d}
+button,input,textarea,select{font:inherit}button{cursor:pointer;border:0}
+.app{display:flex;min-height:100vh}.side{width:230px;background:#fff;border-right:1px solid #e5ebf5;padding:26px 18px;position:sticky;top:0;height:100vh}
+.logo{font-size:27px;font-weight:800;color:#1769e8;margin:4px 12px 30px}.logo span{color:#15213a}
+.nav button{width:100%;text-align:left;background:white;padding:14px 16px;border-radius:12px;margin:4px 0;color:#33415f;font-weight:700}.nav button.active,.nav button:hover{background:#e8f1ff;color:#1769e8}
+.main{flex:1;padding:30px;max-width:1500px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}.top h1{margin:0;font-size:28px}.sub{color:#71809d;margin-top:8px}.pill{padding:9px 14px;border-radius:20px;background:#e9f2ff;color:#1769e8;font-weight:700}
+.grid{display:grid;grid-template-columns:minmax(600px,2fr) minmax(310px,1fr);gap:20px}.card{background:#fff;border:1px solid #e4eaf4;border-radius:18px;padding:20px;box-shadow:0 6px 24px #294f8510}
+.calendar-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.calendar-head h2{margin:0}.monthbtn{width:38px;height:38px;border-radius:50%;background:#f0f4fb}.add{background:#1769e8;color:#fff;padding:11px 16px;border-radius:10px;font-weight:800}
+.week,.days{display:grid;grid-template-columns:repeat(7,1fr)}.week div{padding:10px;text-align:center;color:#6d7b96;font-weight:700}.days{border-top:1px solid #edf1f7;border-left:1px solid #edf1f7}.day{min-height:105px;border-right:1px solid #edf1f7;border-bottom:1px solid #edf1f7;padding:9px;position:relative}.day.today{background:#f8fbff;box-shadow:inset 0 0 0 2px #1769e8;z-index:1}.day.selected-day{box-shadow:inset 0 0 0 3px #8b5cf6;background:#faf7ff;z-index:2}.day.today.selected-day{box-shadow:inset 0 0 0 2px #1769e8, inset 0 0 0 5px #8b5cf6}.selected-badge{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:10px;background:#8b5cf6;color:#fff;font-size:9px;vertical-align:2px}.day.today .date{color:#1769e8}.today-badge{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:10px;background:#1769e8;color:#fff;font-size:9px;vertical-align:2px}.date{font-weight:800;margin-bottom:7px}.muted{color:#b8c0cf}.events{display:flex;flex-direction:column;gap:5px}.event{padding:6px 7px;border-radius:7px;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidecard h3{margin:0 0 16px}.item{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid #edf1f7;align-items:center}.subject{width:52px;text-align:center;padding:7px 4px;border-radius:15px;font-size:12px;font-weight:800}.item strong{display:block}.item small{color:#7d89a0;line-height:1.7}.d{margin-left:auto;font-weight:800;color:#1769e8}.detail{margin-top:20px}.detail .row{display:flex;gap:12px;padding:8px 0}.label{width:70px;color:#71809d;font-weight:700}.prep{margin-top:8px;padding:12px;background:#f7f9fd;border-radius:10px}.modal{display:none;position:fixed;inset:0;background:#15213a;z-index:9999;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modalbox{background:#fff;width:min(560px,100%);max-height:calc(100vh - 40px);overflow-y:auto;border-radius:18px;padding:24px}.modalbox h2{margin-top:0}.field{margin:12px 0}.field label{display:block;font-weight:700;margin-bottom:6px}.field input,.field textarea,.field select{width:100%;padding:11px;border:1px solid #d9e0ec;border-radius:10px}.field textarea{min-height:90px;resize:vertical}.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}.cancel{background:#eef2f7;padding:11px 15px;border-radius:10px}.save{background:#1769e8;color:#fff;padding:11px 15px;border-radius:10px}.list-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.list-head h2{margin:0}.list-count{background:#e9f2ff;color:#1769e8;padding:8px 13px;border-radius:18px;font-weight:800}.filter-row{display:flex;gap:8px;margin-bottom:16px}.filter{padding:8px 14px;border-radius:9px;background:#f1f4f9;color:#64718a;font-weight:700}.filter.active,.filter:hover{background:#e8f1ff;color:#1769e8}.today-detail{padding:16px;border:1px solid #dce8fb;border-radius:14px;background:#f8fbff;margin-top:12px}.today-detail h4{margin:0 0 10px;font-size:17px}.today-detail .detail-line{padding:8px 0;border-bottom:1px solid #e8eef7;line-height:1.55}.today-detail .detail-line:last-child{border-bottom:0}.today-empty{padding:28px 15px;text-align:center;color:#7d89a0;background:#f8faff;border-radius:14px}.list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.list-card{border:1px solid #e5ebf4;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;transition:.15s;background:#fff}.list-card:hover{border-color:#b9d2f8;box-shadow:0 4px 14px #294f8512}.list-date{min-width:62px;text-align:center;background:#f3f7fd;border-radius:10px;padding:9px 7px}.list-date b{display:block;font-size:20px;color:#1769e8}.list-date span{font-size:11px;color:#7d89a0}.list-info{min-width:0;flex:1}.list-info strong{display:block;font-size:15px;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.list-info small{display:block;color:#7d89a0;line-height:1.5}.list-arrow{color:#a3afc2;font-size:20px}.empty{padding:40px 20px;text-align:center;color:#8a96aa;background:#f8faff;border-radius:14px}.detail-content-clean{line-height:1.8;white-space:pre-wrap;padding:4px 0;border:0;background:transparent}.detail-summary{margin-top:14px;padding:14px 16px;background:#eef5ff;border:1px solid #d6e6ff;border-radius:12px;line-height:1.65}.detail-summary strong{display:block;margin-bottom:6px;color:#1769e8}
+.logout{margin-top:8px;background:#f4f6fa!important;color:#71809d!important;font-size:12px!important}.logout:hover{background:#eef2f7!important;color:#1769e8!important}@media(max-width:900px){.list-grid{grid-template-columns:1fr}}.notice{padding:12px 14px;background:#fff8df;border:1px solid #f3df9a;border-radius:12px;color:#765d00;margin-bottom:18px;font-size:14px}
+.right-stack{display:flex;flex-direction:column;height:650px;gap:20px}.right-stack>.card:first-child{height:255px;overflow:hidden}.right-stack>.detail{height:375px;overflow:hidden}.right-stack #upcoming{height:195px;overflow:auto;padding-right:4px}.right-stack #detail{height:295px;overflow:auto;padding-right:4px}
+.admin-page{display:none}.admin-list{display:grid;gap:10px}.admin-row{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #e5ebf4;border-radius:12px;background:#fff}.admin-row .info{flex:1;min-width:0}.admin-row .info strong{display:block;margin-bottom:4px}.admin-row .info small{color:#7d89a0}.admin-actions{display:flex;gap:7px}.danger{background:#fff0f0;color:#d13c3c;padding:9px 12px;border-radius:9px;font-weight:700}
+.detail-modal .modalbox{width:min(700px,100%);max-height:calc(100vh - 40px);overflow-y:auto}.detail-modal-content h2{margin:0 0 10px}.detail-meta{display:flex;gap:12px;color:#71809d;font-size:14px;margin-bottom:16px}.detail-content{padding:16px;background:#f7f9fd;border-radius:12px;line-height:1.75;white-space:pre-wrap}
+@media(max-width:900px){.side{width:75px;padding:15px 8px}.logo{font-size:0;text-align:center}.logo:after{content:"ON";font-size:20px}.nav button{font-size:0;text-align:center}.nav button:before{content:"•";font-size:24px}.main{padding:18px}.grid{grid-template-columns:1fr}.day{min-height:80px}.event{font-size:10px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="logo"><span>수행</span>ON</div>
+  <div class="nav">
+    <button class="active" onclick="showTab('calendar')">📅 달력</button>
+    <button onclick="showTab('list')">📋 수행평가 목록</button>
+    <button onclick="showAdmin()">⚙️ 관리자</button>
+  </div>
+</aside>
+<main class="main">
+  <div class="top">
+    <div><h1>수행평가를 한눈에 확인하세요</h1><div class="sub">언제 무엇을 준비해야 하는지 놓치지 않도록 정리했습니다.</div></div>
+    <div class="pill" id="countPill">이번 달 6개</div>
+  </div>
+  <div id="notice"></div>
+  <section id="calendarTab" class="grid">
+    <div class="card">
+      <div class="calendar-head">
+        <div><button class="monthbtn" onclick="changeMonth(-1)">‹</button> <button class="monthbtn" onclick="changeMonth(1)">›</button> <h2 id="month" style="display:inline-block;margin-left:10px"></h2></div>
+        <span class="adminOnly" style="display:none"><button class="add" onclick="openModal()">＋ 수행평가 추가</button></span>
+      </div>
+      <div class="week"><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div><div>일</div></div>
+      <div id="days" class="days"></div><div style="margin-top:10px;font-size:12px;color:#7d89a0">파란 테두리: 오늘 · 보라색 테두리: 선택한 날짜</div>
+    </div>
+    <div class="right-stack">
+      <div class="card"><h3>다가오는 수행평가</h3><div id="upcoming"></div></div>
+      <div class="card detail"><h3>선택한 수행평가</h3><div id="detail">달력에서 수행평가를 눌러보세요.</div></div>
+    </div>
+  </section>
+  <section id="listTab" class="card list-page" style="display:none">
+    <div class="list-head"><div><h2>수행평가 목록</h2><p class="sub">오늘 해야 할 수행평가를 먼저 확인하고, 이번 주와 이번 달 일정을 확인할 수 있습니다.</p></div><div class="list-count" id="listCount">0개</div></div>
+    <div class="filter-row"><button class="filter active" onclick="filterList('today',this)">오늘</button><button class="filter" onclick="filterList('week',this)">이번 주</button><button class="filter" onclick="filterList('month',this)">이번 달</button></div>
+    <div id="allList" class="list-grid"></div>
+  </section>
+  <section id="adminTab" class="card admin-page">
+    <div class="list-head"><div><h2>관리자</h2><p class="sub">수행평가를 추가하고 등록된 내용을 수정하거나 삭제할 수 있습니다.</p></div><div style="display:flex;gap:8px;align-items:center"><button class="cancel" onclick="logoutAdmin()">로그아웃</button><button class="add" onclick="openModal()">＋ 수행평가 추가</button></div></div>
+    <div id="adminList" class="admin-list"></div>
+  </section>
+</main>
+</div>
+
+<div class="modal" id="modal">
+<div class="modalbox">
+<h2 id="modalTitle">수행평가 추가</h2>
+<div class="field"><label>제목</label><input id="title" placeholder="예: 영어 발표 평가"></div>
+<div class="field"><label>날짜</label><input id="date" type="date"></div>
+<div class="field"><label>내용</label><textarea id="content" placeholder="수행평가에서 해야 할 내용을 적어주세요."></textarea></div>
+<div class="field"><label>요약</label><textarea id="summary" placeholder="수행평가 내용을 한눈에 볼 수 있도록 요약을 작성해주세요."></textarea></div>
+<div class="actions"><button class="cancel" id="deleteBtn" style="display:none;margin-right:auto" onclick="deleteFromModal()">삭제</button><button class="cancel" onclick="closeModal()">취소</button><button class="save" onclick="saveEvent()">저장</button></div>
+</div></div>
+
+<div class="modal detail-modal" id="detailModal">
+<div class="modalbox">
+<div id="detailModalContent" class="detail-modal-content"></div>
+<div class="actions"><button class="cancel" onclick="closeDetailModal()">닫기</button></div>
+</div></div>
+
+<div class="modal" id="adminModal">
+<div class="modalbox">
+<h2>관리자 로그인</h2>
+<p class="sub">관리자만 수행평가 내용을 추가하거나 수정할 수 있습니다.</p>
+<div class="field"><label>관리자 이메일</label><input id="adminEmail" type="email" autocomplete="username" placeholder="관리자 이메일"></div>
+<div class="field"><label>관리자 비밀번호</label><input id="adminPassword" type="password" autocomplete="current-password" placeholder="비밀번호 입력"></div>
+<div class="actions"><button class="cancel" onclick="closeAdminModal()">취소</button><button class="save" onclick="loginAdmin()">로그인</button></div>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase-config.js"></script>
+<script>
+const key='suhaeng_on_events';
+const adminKey='suhaeng_on_admin';
+const defaultEvents=[
+ {id:1,title:'국어 발표 평가',date:'2026-09-10',content:'준비한 주제에 대해 3분 발표를 진행합니다. 발표 자료와 발표 순서를 미리 확인하세요.',summary:'준비한 주제를 3분 동안 발표하며 발표 자료와 순서를 미리 확인합니다.'},
+ {id:2,title:'수학 탐구 보고서',date:'2026-09-12',content:'수학과 관련된 주제를 정해 탐구 보고서를 제출합니다. 탐구 과정과 결과를 구체적으로 작성하세요.',summary:'수학 주제를 정해 탐구 과정을 기록하고 결과를 구체적으로 정리해 제출합니다.'},
+ {id:3,title:'영어 말하기 평가',date:'2026-09-15',content:'교과서에서 배운 주제 중 하나를 선택해 영어로 발표합니다. 발표문을 미리 연습하세요.',summary:'교과서 주제를 선택해 영어로 발표하며 발표문을 미리 연습합니다.'},
+ {id:4,title:'사회 조사 보고서',date:'2026-09-18',content:'사회 현상에 대한 자료를 조사하고 자신의 생각을 포함해 보고서로 정리합니다.',summary:'사회 현상에 관한 자료를 조사하고 자신의 생각을 포함해 보고서로 정리합니다.'},
+ {id:5,title:'과학 실험 보고서',date:'2026-09-22',content:'실험 결과와 관찰 내용을 정리하고 결과에 대한 해석을 작성합니다.',summary:'실험 결과와 관찰 내용을 정리하고 결과를 해석해 작성합니다.'},
+ {id:6,title:'발표 평가',date:'2026-09-25',content:'준비한 발표 자료를 바탕으로 발표합니다.',summary:'준비한 발표 자료를 바탕으로 발표합니다.'}
+];
+
+let events=[];
+let now=new Date();
+let view=new Date(now.getFullYear(),now.getMonth(),1), selected=null, selectedDate=null;
+let isAdmin=false;
+let loading=true;
+
+const sb = window.supabaseClient;
+
+function escapeHTML(value){
+ return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function toDateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function getSummary(e){ return (e.summary||'').trim() || '등록된 요약이 없습니다.'; }
+
+async function loadEvents(){
+ loading=true;
+ render();
+ const {data,error}=await sb.from('assignments').select('*').order('date',{ascending:true}).order('id',{ascending:true});
+ if(error){
+   console.error(error);
+   const local=JSON.parse(localStorage.getItem(key)||'null');
+   events=local||defaultEvents;
+   document.getElementById('notice').innerHTML='<div class="notice">온라인 데이터베이스를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.</div>';
+ }else{
+   events=(data||[]).map(e=>({id:e.id,title:e.title,date:e.date,content:e.content||'',summary:e.summary||''}));
+ }
+ loading=false;
+ render();
+}
+
+async function migrateLocalData(){
+ const {count,error}=await sb.from('assignments').select('id',{count:'exact',head:true});
+ if(error || count!==0)return;
+ const local=JSON.parse(localStorage.getItem(key)||'null');
+ const source=(local&&Array.isArray(local))?local:defaultEvents;
+ const rows=source.map(e=>({title:e.title,date:e.date,content:e.content||'',summary:e.summary||''}));
+ if(!rows.length)return;
+ const {data,error:insertError}=await sb.from('assignments').insert(rows).select();
+ if(insertError){
+   console.error(insertError);
+   return;
+ }
+ events=(data||[]).map(e=>({id:e.id,title:e.title,date:e.date,content:e.content||'',summary:e.summary||''}));
+}
+
+function render(){
+ document.getElementById('month').textContent=`${view.getFullYear()}년 ${view.getMonth()+1}월`;
+ renderCalendarOnly();
+ const sorted=[...events].sort((a,b)=>a.date.localeCompare(b.date));
+ const todayStr=toDateKey(now);
+ const upcoming=sorted.filter(e=>e.date>=todayStr);
+ document.getElementById('upcoming').innerHTML=loading?'불러오는 중…':(upcoming.slice(0,7).map(e=>itemHTML(e)).join('')||'예정된 수행평가가 없습니다.');
+ renderList('today');
+ document.getElementById('countPill').textContent=`이번 달 ${events.filter(e=>{const d=new Date(e.date);return d.getMonth()===view.getMonth()&&d.getFullYear()===view.getFullYear()}).length}개`;
+ document.querySelectorAll('.adminOnly').forEach(el=>el.style.display=isAdmin?'inline':'none');
+ renderAdmin();
+}
+
+function renderAdmin(){
+ const box=document.getElementById('adminList');
+ if(!box)return;
+ const sorted=[...events].sort((a,b)=>a.date.localeCompare(b.date));
+ box.innerHTML=sorted.length?sorted.map(e=>`<div class="admin-row"><div class="info"><strong>${escapeHTML(e.title)}</strong><small>${escapeHTML(e.date)}</small></div><div class="admin-actions"><button class="cancel" onclick="openModal(${Number(e.id)})">수정</button><button class="danger" onclick="deleteEvent(${Number(e.id)})">삭제</button></div></div>`).join(''):'<div class="empty">등록된 수행평가가 없습니다.</div>';
+}
+
+function itemHTML(e, showEdit=false){
+ return `<div class="item" onclick="selectEvent(${Number(e.id)})"><div><strong>${escapeHTML(e.title)}</strong><small>${escapeHTML(e.date)}</small></div>${isAdmin&&showEdit?`<button class="cancel" style="margin-left:auto;padding:7px 10px" onclick="event.stopPropagation();editEvent(${Number(e.id)})">수정</button>`:''}</div>`;
+}
+
+function renderList(mode='today'){
+ const base=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+ const todayStr=toDateKey(base);
+ const start=new Date(base);
+ const mondayOffset=(base.getDay()+6)%7;
+ start.setDate(base.getDate()-mondayOffset);
+ const end=new Date(start); end.setDate(start.getDate()+6);
+ const monthStart=new Date(view.getFullYear(),view.getMonth(),1);
+ const monthEnd=new Date(view.getFullYear(),view.getMonth()+1,0);
+ let filtered=[...events].sort((a,b)=>a.date.localeCompare(b.date));
+ if(mode==='today') filtered=filtered.filter(e=>e.date===todayStr);
+ if(mode==='week') filtered=filtered.filter(e=>{const d=new Date(e.date+'T00:00:00');return d>=base&&d<=end;});
+ if(mode==='month') filtered=filtered.filter(e=>{const d=new Date(e.date+'T00:00:00');return d>=base&&d<=monthEnd;});
+ const box=document.getElementById('allList');
+ document.getElementById('listCount').textContent=`${filtered.length}개`;
+ if(!filtered.length){box.innerHTML=mode==='today'?'<div class="today-empty">오늘 예정된 수행평가가 없습니다.</div>':'<div class="empty">지나간 수행평가는 제외되어 표시되지 않습니다.<br>해당 기간에 남은 수행평가가 없습니다.</div>';return}
+ box.innerHTML=filtered.map(e=>{
+   const d=new Date(e.date+'T00:00:00');
+   return `<div class="list-card" onclick="openDetailModal(${Number(e.id)})">
+    <div class="list-date"><b>${d.getDate()}</b><span>${d.getMonth()+1}월</span></div>
+    <div class="list-info"><strong>${escapeHTML(e.title)}</strong><small>${escapeHTML(e.date)}</small></div>
+    <span class="list-arrow">›</span>
+   </div>`
+ }).join('');
+ if(mode==='today') selectEvent(filtered[0].id, true);
+}
+
+function filterList(mode,btn){document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));btn.classList.add('active');renderList(mode)}
+
+function selectDay(dateKey){
+ selectedDate=dateKey;
+ selected=null;
+ const dayEvents=events.filter(e=>e.date===dateKey).sort((a,b)=>a.title.localeCompare(b.title));
+ if(dayEvents.length){ selectEvent(dayEvents[0].id); } else {
+   document.getElementById('detail').innerHTML=`<div><h3>${escapeHTML(dateKey.replace(/-/g,'.'))} 일정</h3><p style="color:#7d89a0">등록된 수행평가가 없습니다.</p></div>`;
+ }
+ renderCalendarOnly();
+}
+
+function renderCalendarOnly(){
+ const first=(new Date(view.getFullYear(),view.getMonth(),1).getDay()+6)%7, last=new Date(view.getFullYear(),view.getMonth()+1,0).getDate();
+ let h='';
+ for(let i=0;i<first;i++)h+='<div class="day"></div>';
+ for(let d=1;d<=last;d++){
+  const ds=`${view.getFullYear()}-${String(view.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const es=events.filter(e=>e.date===ds);
+  const isToday=(view.getFullYear()===now.getFullYear()&&view.getMonth()===now.getMonth()&&d===now.getDate());
+  const isSelected=(selectedDate===ds);
+  h+=`<div class="day ${isToday?'today ':''}${isSelected?'selected-day':''}" onclick="selectDay('${ds}')"><div class="date">${d}${isToday?'<span class="today-badge">오늘</span>':''}${isSelected&&!isToday?'<span class="selected-badge">선택</span>':''}</div><div class="events">${es.map(e=>`<div class="event other" onclick="event.stopPropagation();selectEvent(${Number(e.id)})">${escapeHTML(e.title)}</div>`).join('')}</div></div>`;
+ }
+ document.getElementById('days').innerHTML=h;
+}
+
+function openDetailModal(id){
+ const e=events.find(x=>x.id===id); if(!e)return;
+ document.getElementById('detailModalContent').innerHTML=`<h2>${escapeHTML(e.title)}</h2><div class="detail-meta"><span>📅 ${escapeHTML(e.date)}</span></div><div class="detail-summary"><strong>요약</strong><div>${escapeHTML(getSummary(e))}</div></div><div class="detail-content detail-content-clean">${escapeHTML(e.content||'등록된 상세 내용이 없습니다.')}</div>`;
+ document.getElementById('detailModal').classList.add('show');
+}
+function closeDetailModal(){document.getElementById('detailModal').classList.remove('show')}
+
+function selectEvent(id, auto=false){
+ selected=events.find(e=>e.id===id);
+ if(selected) selectedDate=selected.date;
+ if(!selected)return;
+ document.getElementById('detail').innerHTML=
+ `<div><h3>${escapeHTML(selected.title)}</h3>
+ <div class="row"><span class="label">제출일</span><b>${escapeHTML(selected.date)}</b></div>
+ <div class="detail-summary"><strong>요약</strong><div>${escapeHTML(getSummary(selected))}</div></div>
+ <button class="save" style="margin-top:12px" onclick="openDetailModal(${Number(selected.id)})">자세히 보기</button>
+ </div>`;
+ renderCalendarOnly();
+}
+
+function changeMonth(n){view=new Date(view.getFullYear(),view.getMonth()+n,1);render()}
+function showTab(t){
+ ['calendar','list'].forEach(x=>document.getElementById(x+'Tab').style.display=x===t?'grid':'none'); document.getElementById('adminTab').style.display=t==='admin'?'block':'none';
+ document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+ const nav=[...document.querySelectorAll('.nav button')];
+ if(t==='calendar')nav[0]?.classList.add('active');
+ if(t==='list')nav[1]?.classList.add('active');
+}
+function showAdmin(){
+ if(isAdmin){
+   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+   document.querySelectorAll('.nav button')[2]?.classList.add('active');
+   document.getElementById('notice').innerHTML='';
+   showTab('admin');
+   renderAdmin();
+ }else{
+   document.getElementById('adminModal').classList.add('show');
+   document.getElementById('adminEmail').value='';
+   document.getElementById('adminPassword').value='';
+   document.getElementById('adminEmail').focus();
+ }
+}
+async function loginAdmin(){
+ const email=document.getElementById('adminEmail').value.trim();
+ const password=document.getElementById('adminPassword').value;
+ if(!email||!password){alert('이메일과 비밀번호를 입력해주세요.');return}
+ const {data,error}=await sb.auth.signInWithPassword({email,password});
+ if(error){
+   alert('로그인 오류: ' + error.message);
+   console.error('Supabase 로그인 오류:', error);
+   return;
+ }
+ isAdmin=true;
+ sessionStorage.setItem(adminKey,'true');
+ closeAdminModal();
+ await migrateLocalData();
+ await loadEvents();
+ document.getElementById('notice').innerHTML='<div class="notice">관리자 로그인 완료. 이제 수행평가를 추가하거나 수정할 수 있습니다.</div>';
+ showTab('admin');
+ document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+ document.querySelectorAll('.nav button')[2]?.classList.add('active');
+}
+function closeAdminModal(){document.getElementById('adminModal').classList.remove('show')}
+async function logoutAdmin(){await sb.auth.signOut();isAdmin=false;sessionStorage.removeItem(adminKey);document.getElementById('notice').innerHTML='';render();showTab('calendar')}
+
+async function openModal(id=null){
+ if(!isAdmin){showAdmin();return}
+ document.getElementById('modal').classList.add('show');
+ document.getElementById('modalTitle').textContent=id?'수행평가 수정':'수행평가 추가';
+ if(id){
+   const e=events.find(x=>x.id===id);
+   if(!e)return;
+   document.getElementById('title').value=e.title;
+   document.getElementById('date').value=e.date;
+   document.getElementById('content').value=e.content||'';
+   document.getElementById('summary').value=e.summary||'';
+   document.getElementById('modal').dataset.editId=id;
+   document.getElementById('deleteBtn').style.display='inline-block';
+ }else{
+   document.getElementById('title').value='';
+   document.getElementById('content').value='';
+   document.getElementById('summary').value='';
+   document.getElementById('date').value=toDateKey(now);
+   delete document.getElementById('modal').dataset.editId;
+   document.getElementById('deleteBtn').style.display='none';
+ }
+}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function editEvent(id){openModal(id)}
+async function deleteFromModal(){
+ const id=Number(document.getElementById('modal').dataset.editId);
+ if(id) await deleteEvent(id);
+ closeModal();
+}
+async function saveEvent(){
+ if(!isAdmin){showAdmin();return}
+ const titleVal=document.getElementById('title').value.trim();
+ const dateVal=document.getElementById('date').value;
+ const contentVal=document.getElementById('content').value.trim();
+ const summaryVal=document.getElementById('summary').value.trim();
+ if(!titleVal||!dateVal){alert('제목과 날짜를 입력해주세요.');return}
+ const editId=document.getElementById('modal').dataset.editId;
+ let error;
+ if(editId){
+   const {error:e}=await sb.from('assignments').update({title:titleVal,date:dateVal,content:contentVal,summary:summaryVal,updated_at:new Date().toISOString()}).eq('id',Number(editId));
+   error=e;
+ }else{
+   const {error:e}=await sb.from('assignments').insert({title:titleVal,date:dateVal,content:contentVal,summary:summaryVal});
+   error=e;
+ }
+ if(error){alert('저장에 실패했습니다. 인터넷 연결과 관리자 로그인을 확인해주세요.');console.error(error);return}
+ closeModal();
+ await loadEvents();
+ if(editId)selectEvent(Number(editId));
+}
+async function deleteEvent(id){
+ if(!isAdmin)return;
+ const e=events.find(x=>x.id===id);
+ if(!e)return;
+ if(!confirm(`"${e.title}" 수행평가를 삭제할까요?`))return;
+ const {error}=await sb.from('assignments').delete().eq('id',id);
+ if(error){alert('삭제에 실패했습니다.');console.error(error);return}
+ if(selected && selected.id===id){ selected=null; selectedDate=null; }
+ document.getElementById('detail').innerHTML='달력에서 수행평가를 눌러보세요.';
+ await loadEvents();
+}
+
+(async()=>{
+ const {data:{session}}=await sb.auth.getSession();
+ isAdmin=!!session;
+ if(isAdmin)sessionStorage.setItem(adminKey,'true');
+ await loadEvents();
+})();
+</script>
+<script>
+document.addEventListener('keydown', e=>{if(e.key==='Escape'){closeModal();closeAdminModal();closeDetailModal();}});
+</script>
+</body>
+</html>
