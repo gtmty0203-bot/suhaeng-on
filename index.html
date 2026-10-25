@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>수행평가 달력</title>
+<title>수행ON</title>
 <script>window.__resources={};</script>
 <script>/**
  * @license React
@@ -2254,7 +2254,7 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
     <div style="min-height:100vh;padding:72px 24px 24px;display:flex;flex-direction:column;gap:28px">
       <div style="display:flex;flex-direction:column;gap:10px">
         <div style="font-size:28px;font-weight:700;line-height:1.35;animation:heroIn .6s cubic-bezier(.2,.9,.3,1) both">수행평가,<br>이제 놓치지 마요</div>
-        <div style="font-size:15px;color:#666;animation:heroIn .6s cubic-bezier(.2,.9,.3,1) .12s both">학번으로 로그인하면 내 준비 상황이 저장돼요</div>
+        <div style="font-size:15px;color:#666;animation:heroIn .6s cubic-bezier(.2,.9,.3,1) .12s both">학번으로 로그인하면 어느 기기에서든 내 준비 상황을 볼 수 있어요</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px;animation:heroIn .6s cubic-bezier(.2,.9,.3,1) .24s both">
         <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#555">아이디 (학번)
@@ -2267,8 +2267,8 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
           <div style="font-size:13px;color:#c0392b;animation:{{ errAnim }} .4s ease">{{ loginErr }}</div>
         </sc-if>
       </div>
-      <button sc-camel-on-click="{{ doLogin }}" style="height:54px;border:none;border-radius:14px;background:{{ accent }};color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s;animation:heroIn .6s cubic-bezier(.2,.9,.3,1) .36s both" style-active="transform:scale(.97)">로그인</button>
-      <div style="font-size:12px;color:#999;text-align:center;line-height:1.7;animation:heroIn .6s ease .48s both">데모 계정 · 학생 20315 / 1234 · 관리자 admin / 0000<br>계정은 관리자가 만들어 줍니다</div>
+      <button sc-camel-on-click="{{ doLogin }}" style="height:54px;border:none;border-radius:14px;background:{{ accent }};color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s;animation:heroIn .6s cubic-bezier(.2,.9,.3,1) .36s both" style-active="transform:scale(.97)">{{ loginBtnLabel }}</button>
+      <div style="font-size:12px;color:#999;text-align:center;line-height:1.7;animation:heroIn .6s ease .48s both">계정은 관리자가 만들어 줍니다</div>
     </div>
   </sc-if>
 
@@ -2280,6 +2280,7 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
       <sc-if value="{{ isAdmin }}">
         <span style="font-size:11px;padding:3px 7px;border-radius:6px;background:#111;color:#fff;flex:none">관리자</span>
       </sc-if>
+      <button sc-camel-on-click="{{ changePw }}" style="border:1px solid #ddd;background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap;flex:none">비번 변경</button>
       <button sc-camel-on-click="{{ logout }}" style="border:1px solid #ddd;background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap;flex:none">로그아웃</button>
     </div>
   </div>
@@ -2477,9 +2478,6 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;font&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;머니그라피&quot;,&quot;기본 (시스템)&quot;,&quot;Noto Sans KR&quot;,&quot;IBM Plex Sans KR&quot;,&quot;나눔고딕&quot;,&quot;고운돋움&quot;,&quot;나눔명조&quot;],&quot;default&quot;:&quot;머니그라피&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;테마&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;options&quot;:[&quot;#111111&quot;,&quot;#2F6FED&quot;,&quot;#1A9E6A&quot;,&quot;#E5533D&quot;,&quot;#7A5AF8&quot;],&quot;default&quot;:&quot;#111111&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;테마&quot;},&quot;background&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;흰색&quot;,&quot;따뜻한 흰색&quot;,&quot;차가운 흰색&quot;],&quot;default&quot;:&quot;흰색&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;테마&quot;}}">
-const KEY = 'suhang-demo-v2';
-const UKEY = 'suhang-demo-user2';
-const AKEY = 'suhang-demo-accounts';
 const pad = n => String(n).padStart(2, '0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
@@ -2497,41 +2495,70 @@ const BGS = { '흰색': '#ffffff', '따뜻한 흰색': '#fbf9f5', '차가운 흰
 const SUBJECT_COLORS = { '국어': '#E5533D', '수학': '#2F6FED', '영어': '#1A9E6A', '과학': '#7A5AF8', '사회': '#D9822B', '음악': '#D6479B', '미술': '#0E9BB0', '체육': '#5E8C1F', '역사': '#9A6B3F', '기술': '#5B6B7F', '가정': '#C9564F', '정보': '#3B5BDB' };
 const subjColor = s => SUBJECT_COLORS[(s || '').trim()] || '#111111';
 const CONF_COLORS = ['#E5533D', '#2F6FED', '#1A9E6A', '#7A5AF8', '#F2B705', '#D6479B'];
-function seed() {
-  const t = new Date(); const at = n => ymd(new Date(t.getFullYear(), t.getMonth(), t.getDate() + n));
-  return [
-    { id: 1, subject: '국어', title: '독서 감상문 발표', date: at(1), desc: '3분 내외 발표. 읽은 책 지참.', detail: '평가 범위\n2학기에 읽은 책 중 1권을 골라 감상을 발표합니다.\n\n진행 방식\n· 1인당 3분 내외 발표\n· 발표 후 1분 질의응답\n· 출석번호 순서로 진행\n\n준비물\n· 읽은 책 실물\n· 발표 메모 (A4 1장 이내, 보면서 발표 가능)\n\n평가 기준 (20점)\n· 내용 이해 8점\n· 자신의 생각 표현 6점\n· 발표 태도 및 전달력 6점\n\n결석 시 다음 국어 시간에 발표합니다.' },
-    { id: 2, subject: '수학', title: '함수 단원 서술형 평가', date: at(3), desc: '교과서 p.84~112 범위', detail: '범위\n교과서 p.84~112 (일차함수와 그래프)\n\n형식\n서술형 4문항, 40분\n\n준비물\n필기구, 자 (계산기 사용 불가)\n\n풀이 과정이 없으면 부분 점수가 없습니다.' },
-    { id: 3, subject: '영어', title: '모둠 영어 말하기', date: at(3), desc: '모둠별 대본 제출 후 발표', detail: '주제\nMy Dream School\n\n모둠별 4명, 5분 내외 역할극. 대본은 전날까지 제출합니다.' },
-    { id: 4, subject: '과학', title: '실험 보고서 제출', date: at(6), desc: '산과 염기 실험 결과 정리', detail: '실험 목적, 과정, 결과, 결론 순서로 작성합니다.\n손글씨 또는 출력 모두 가능합니다.' },
-    { id: 5, subject: '사회', title: '지역 조사 포스터', date: at(10), desc: 'A3 크기, 모둠 활동', detail: '우리 지역의 문제 하나를 조사해 해결 방안을 포스터로 정리합니다.\nA3 크기, 모둠별 1장.' },
-    { id: 6, subject: '음악', title: '리코더 실기', date: at(14), desc: '지정곡 1곡', detail: '지정곡 중 1곡을 골라 연주합니다. 악보는 볼 수 있습니다.' }
-  ];
+const SB_URL = 'https://facewpuuybgtagihporn.supabase.co';
+const SB_KEY = 'sb_publishable_Smjk_R3KfSow_eW1K7H6GQ_zHQAbR3p';
+const TKEY = 'suhang-session';
+const MKEY = 'suhang-me';
+const ERR_MSG = {
+  bad_login: '아이디나 비밀번호를 다시 확인해주세요',
+  session_expired: '다시 로그인해주세요',
+  admin_only: '관리자만 할 수 있어요',
+  id_taken: '이미 있는 아이디예요',
+  pw_too_short: '비밀번호는 4자 이상이어야 해요',
+  cannot_delete_self: '내 계정은 삭제할 수 없어요'
+};
+async function rpc(fn, args) {
+  let r;
+  try {
+    r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(args || {}) });
+  } catch (e) { const err = new Error('network'); err.code = 'network'; throw err; }
+  const txt = await r.text(); let body = null;
+  try { body = txt ? JSON.parse(txt) : null; } catch (e) { body = null; }
+  if (!r.ok) { const err = new Error((body && body.message) || `HTTP ${r.status}`); err.code = (body && body.message) || 'server'; throw err; }
+  return body;
 }
-const SEED_ACCOUNTS = [
-  { id: 'admin', pw: '0000', name: '관리자', role: 'admin' },
-  { id: '20315', pw: '1234', name: '김민지', role: 'student' }
-];
+const errText = e => ERR_MSG[e && e.code] || (e && e.code === 'network' ? '서버에 연결하지 못했어요. 잠시 후 다시 시도해주세요' : '문제가 생겼어요. 잠시 후 다시 시도해주세요');
 function loadJSON(k, fb) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; } catch (e) { return fb; } }
-function load() {
-  const s = loadJSON(KEY, null); if (!s || !s.items) return { items: seed(), done: {} };
-  const byId = {}; seed().forEach(i => (byId[i.id] = i));
-  return { items: s.items.map(i => i.detail || !byId[i.id] ? i : { ...i, detail: byId[i.id].detail }), done: s.done || {} };
-}
+function saveJSON(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage blocked */ } }
 class Component extends DCLogic {
   constructor(p) {
     super(p);
-    const s = load(); const t = new Date();
-    const accounts = loadJSON(AKEY, SEED_ACCOUNTS);
-    const uid = loadJSON(UKEY, null);
-    this.state = { items: s.items, done: s.done, accounts, uid: accounts.some(a => a.id === uid) ? uid : null, login: { id: '', pw: '' }, loginErr: '', acc: { role: 'student', name: '', id: '', pw: '' }, y: t.getFullYear(), m: t.getMonth(), sel: ymd(t), tab: 'cal', sheet: false, detailId: null, toast: '', burst: 0, monthTick: 0, monthDir: 'L', selTick: 0, pctShown: 0, errTick: 0, form: { subject: '', title: '', date: ymd(t), desc: '', detail: '' } };
+    const t = new Date();
+    const token = loadJSON(TKEY, null);
+    const me = token ? loadJSON(MKEY, null) : null;
+    this.state = { items: [], done: {}, accounts: [], me, uid: me ? me.id : null, loading: !!me, busy: false, login: { id: '', pw: '' }, loginErr: '', acc: { role: 'student', name: '', id: '', pw: '' }, y: t.getFullYear(), m: t.getMonth(), sel: ymd(t), tab: 'cal', sheet: false, detailId: null, toast: '', burst: 0, monthTick: 0, monthDir: 'L', selTick: 0, pctShown: 0, errTick: 0, form: { subject: '', title: '', date: ymd(t), desc: '', detail: '' } };
   }
   componentDidMount() {
-    this.onStorage = e => {
-      if (e.key === KEY) { const s = load(); this.setState({ items: s.items, done: s.done }); }
-      if (e.key === AKEY) this.setState({ accounts: loadJSON(AKEY, SEED_ACCOUNTS) });
-    };
+    this.onVisible = () => { if (document.visibilityState === 'visible') this.refresh(); };
+    this.onStorage = e => { if (e.key === TKEY && !e.newValue) this.clearSession(); };
+    document.addEventListener('visibilitychange', this.onVisible);
     window.addEventListener('storage', this.onStorage);
+    this.poll = setInterval(() => { if (document.visibilityState === 'visible') this.refresh(); }, 60000);
+    this.refresh();
+  }
+  token() { return loadJSON(TKEY, null); }
+  clearSession(msg) {
+    saveJSON(TKEY, null); saveJSON(MKEY, null);
+    this.setState({ me: null, uid: null, items: [], done: {}, accounts: [], loading: false, sheet: false, detailId: null });
+    if (msg) this.showToast(msg);
+  }
+  async refresh() {
+    const token = this.token(); if (!token) { if (this.state.me) this.clearSession(); return; }
+    try {
+      const st = await rpc('app_state', { p_token: token });
+      if (this.token() !== token) return;
+      const mine = {}; (st.done || []).forEach(id => (mine[id] = true));
+      saveJSON(MKEY, st.user);
+      this.setState({ me: st.user, uid: st.user.id, items: st.items || [], done: { [st.user.id]: mine }, accounts: st.accounts || [], loading: false });
+    } catch (e) {
+      if (e.code === 'session_expired') this.clearSession('다시 로그인해주세요');
+      else { this.setState({ loading: false }); if (e.code !== 'network' || !this.netWarned) this.showToast(errText(e)); this.netWarned = e.code === 'network'; }
+    }
+  }
+  async call(fn, args, okMsg) {
+    try { await rpc(fn, { p_token: this.token(), ...args }); if (okMsg) this.showToast(okMsg); return true; }
+    catch (e) { if (e.code === 'session_expired') this.clearSession('다시 로그인해주세요'); else this.showToast(errText(e)); return false; }
+    finally { this.refresh(); }
   }
   componentDidUpdate() { this.countUp(); }
   countUp() {
@@ -2547,12 +2574,10 @@ class Component extends DCLogic {
     };
     this.raf = requestAnimationFrame(step);
   }
-  componentWillUnmount() { window.removeEventListener('storage', this.onStorage); clearTimeout(this.tt); clearTimeout(this.bt); cancelAnimationFrame(this.raf); }
+  componentWillUnmount() { document.removeEventListener('visibilitychange', this.onVisible); window.removeEventListener('storage', this.onStorage); clearInterval(this.poll); clearTimeout(this.tt); clearTimeout(this.bt); cancelAnimationFrame(this.raf); }
   loginFail(msg) { this.setState(s => ({ loginErr: msg, errTick: s.errTick + 1 })); }
-  save(items, done) { localStorage.setItem(KEY, JSON.stringify({ items, done })); this.setState({ items, done }); }
-  saveAccounts(accounts) { localStorage.setItem(AKEY, JSON.stringify(accounts)); this.setState({ accounts }); }
   showToast(msg) { clearTimeout(this.tt); this.setState({ toast: '' }, () => this.setState({ toast: msg })); this.tt = setTimeout(() => this.setState({ toast: '' }), 2200); }
-  user() { return this.state.accounts.find(a => a.id === this.state.uid) || null; }
+  user() { return this.state.me; }
   dday(date) {
     const t = new Date(); t.setHours(0, 0, 0, 0);
     const n = Math.round((parse(date) - t) / 86400000);
@@ -2561,13 +2586,15 @@ class Component extends DCLogic {
   myDone() { return this.state.done[this.state.uid] || {}; }
   toggleDone(id) {
     const uid = this.state.uid; if (!uid) return;
-    const mine = { ...this.myDone(), [id]: !this.myDone()[id] };
-    this.save(this.state.items, { ...this.state.done, [uid]: mine });
-    if (mine[id]) {
+    const on = !this.myDone()[id];
+    const mine = { ...this.myDone(), [id]: on };
+    this.setState({ done: { ...this.state.done, [uid]: mine } });
+    if (on) {
       clearTimeout(this.bt); this.setState({ burst: Date.now() });
       this.bt = setTimeout(() => this.setState({ burst: 0 }), 1300);
       this.showToast('준비 완료! 잘하고 있어요');
     }
+    this.call('app_set_done', { p_item_id: id, p_done: on });
   }
   renderConfetti() {
     if (!this.state.burst) return null;
@@ -2581,22 +2608,42 @@ class Component extends DCLogic {
   setForm(k, v) { this.setState(s => ({ form: { ...s.form, [k]: v } })); }
   setLogin(k, v) { this.setState(s => ({ login: { ...s.login, [k]: v }, loginErr: '' })); }
   setAcc(k, v) { this.setState(s => ({ acc: { ...s.acc, [k]: v } })); }
-  doLogin() {
+  async doLogin() {
     const { id, pw } = this.state.login;
-    const a = this.state.accounts.find(x => x.id === id.trim());
     if (!id.trim()) return this.loginFail('아이디를 입력해주세요');
-    if (!a || a.pw !== pw) return this.loginFail('아이디나 비밀번호를 다시 확인해주세요');
-    localStorage.setItem(UKEY, JSON.stringify(a.id));
-    this.setState({ uid: a.id, login: { id: '', pw: '' }, tab: 'cal' });
-    this.showToast(`${a.name}님, 환영해요`);
+    if (!pw) return this.loginFail('비밀번호를 입력해주세요');
+    if (this.state.busy) return;
+    this.setState({ busy: true });
+    try {
+      const r = await rpc('app_login', { p_id: id.trim(), p_pw: pw });
+      saveJSON(TKEY, r.token); saveJSON(MKEY, r.user);
+      this.setState({ me: r.user, uid: r.user.id, loading: true, login: { id: '', pw: '' }, tab: 'cal' });
+      this.showToast(`${r.user.name}님, 환영해요`);
+      this.refresh();
+    } catch (e) { this.loginFail(errText(e)); }
+    finally { this.setState({ busy: false }); }
   }
-  createAcc() {
+  logout() {
+    const token = this.token();
+    if (token) rpc('app_logout', { p_token: token }).catch(() => {});
+    this.clearSession();
+  }
+  async changePw() {
+    const oldPw = prompt('지금 비밀번호를 입력해주세요'); if (oldPw == null) return;
+    const newPw = prompt('새 비밀번호를 입력해주세요 (4자 이상)'); if (newPw == null) return;
+    if (newPw.trim().length < 4) return this.showToast('비밀번호는 4자 이상이어야 해요');
+    const again = prompt('새 비밀번호를 한 번 더 입력해주세요'); if (again == null) return;
+    if (again !== newPw) return this.showToast('새 비밀번호가 서로 달라요');
+    this.call('app_change_password', { p_old: oldPw, p_new: newPw }, '비밀번호를 바꿨어요');
+  }
+  async createAcc() {
     const a = this.state.acc; const name = a.name.trim(); const id = a.id.trim(); const pw = a.pw.trim();
     if (!name || !id || !pw) return this.showToast('이름, 아이디, 비밀번호를 모두 입력해주세요');
     if (this.state.accounts.some(x => x.id === id)) return this.showToast('이미 있는 아이디예요');
-    this.saveAccounts([...this.state.accounts, { id, pw, name, role: a.role }]);
-    this.setState({ acc: { role: a.role, name: '', id: '', pw: '' } });
-    this.showToast(`${name} 계정을 만들었어요`);
+    if (this.state.busy) return;
+    this.setState({ busy: true });
+    const ok = await this.call('app_create_account', { p_id: id, p_pw: pw, p_name: name, p_role: a.role }, `${name} 계정을 만들었어요`);
+    this.setState({ busy: false, ...(ok ? { acc: { role: a.role, name: '', id: '', pw: '' } } : {}) });
   }
   renderVals() {
     const s = this.state; const p = this.props; const today = ymd(new Date());
@@ -2640,7 +2687,7 @@ class Component extends DCLogic {
         checkAnim: done[it.id] ? 'checkIn .4s ease' : 'none',
         onToggle: () => this.toggleDone(it.id),
         onDetail: () => this.setState({ detailId: it.id }),
-        onDelete: () => { if (!confirm(`'${it.title}'을(를) 삭제할까요?`)) return; this.save(s.items.filter(x => x.id !== it.id), s.done); this.showToast('삭제되었어요'); },
+        onDelete: () => { if (!confirm(`'${it.title}'을(를) 삭제할까요?`)) return; this.setState(st => ({ items: st.items.filter(x => x.id !== it.id), detailId: null })); this.call('app_delete_item', { p_item_id: it.id }, '삭제되었어요'); },
         onOpen: () => { this.setState({ tab: 'cal', sel: it.date, y: d.getFullYear(), m: d.getMonth() }); window.scrollTo(0, 0); }
       };
     };
@@ -2657,8 +2704,8 @@ class Component extends DCLogic {
     const tabs = isAdmin ? ['cal', 'list', 'accounts'] : ['cal', 'list'];
     this.targetPct = week.length ? Math.round(wDone / week.length * 100) : 0;
     const nx = up.find(i => !done[i.id]);
-    let headline = '남은 수행평가가 없어요. 오늘은 푹 쉬어요';
-    if (user && nx) {
+    let headline = s.loading ? '일정을 불러오는 중이에요' : '남은 수행평가가 없어요. 오늘은 푹 쉬어요';
+    if (s.loading) { /* keep loading headline */ } else if (user && nx) {
       const n = Math.round((parse(nx.date) - parse(today)) / 86400000);
       const when = n === 0 ? '오늘' : n === 1 ? '내일' : n === 2 ? '모레' : `${n}일 뒤에`;
       headline = `${user.name}님, ${when} ${nx.subject} ${nx.title} 있어요`;
@@ -2668,7 +2715,7 @@ class Component extends DCLogic {
       loggedOut: !user, loggedIn: !!user,
       login: s.login, onLoginId: e => this.setLogin('id', e.target.value), onLoginPw: e => this.setLogin('pw', e.target.value),
       hasLoginErr: !!s.loginErr, loginErr: s.loginErr, doLogin: () => this.doLogin(),
-      logout: () => { localStorage.removeItem(UKEY); this.setState({ uid: null, sheet: false, detailId: null }); },
+      logout: () => this.logout(), changePw: () => this.changePw(), loginBtnLabel: s.busy ? '로그인 중…' : '로그인',
       userLabel: user ? (user.role === 'student' ? `${user.id} ${user.name}` : user.name) : '',
       isAdmin, showFab: isAdmin && tab !== 'accounts',
       upcoming: up.slice(0, 12).map(deco),
@@ -2700,7 +2747,7 @@ class Component extends DCLogic {
       accounts: s.accounts.map((a, i) => ({
         ...a, initial: a.name.slice(0, 1), roleLabel: a.role === 'admin' ? '관리자' : '학생', delay: `${Math.min(i, 10) * 40}ms`,
         canDelete: a.id !== s.uid,
-        onDelete: () => { if (!confirm(`${a.name} 계정을 삭제할까요?`)) return; this.saveAccounts(s.accounts.filter(x => x.id !== a.id)); this.showToast('계정을 삭제했어요'); }
+        onDelete: () => { if (!confirm(`${a.name} 계정을 삭제할까요?`)) return; this.setState(st => ({ accounts: st.accounts.filter(x => x.id !== a.id) })); this.call('app_delete_account', { p_id: a.id }, '계정을 삭제했어요'); }
       })),
       hasToast: !!s.toast, toast: s.toast,
       detailOpen: !!detailItem, detail: detailItem ? deco(detailItem) : {},
@@ -2712,13 +2759,15 @@ class Component extends DCLogic {
       onDate: e => this.setForm('date', e.target.value), onDesc: e => this.setForm('desc', e.target.value),
       onDetailText: e => this.setForm('detail', e.target.value),
       submitBg: valid ? accent : '#bbb',
-      submit: () => {
+      submit: async () => {
         if (!valid) { this.showToast('과목, 제목, 날짜를 입력해주세요'); return; }
-        const it = { id: Date.now(), subject: f.subject.trim(), title: f.title.trim(), date: f.date, desc: f.desc.trim(), detail: f.detail.trim() };
-        this.save([...s.items, it], s.done);
+        if (s.busy) return;
+        this.setState({ busy: true });
+        const ok = await this.call('app_add_item', { p_subject: f.subject.trim(), p_title: f.title.trim(), p_date: f.date, p_desc: f.desc.trim(), p_detail: f.detail.trim() }, '추가 완료 · 모든 학생에게 공개됐어요');
+        this.setState({ busy: false });
+        if (!ok) return;
         const d = parse(f.date);
         this.setState({ sheet: false, sel: f.date, y: d.getFullYear(), m: d.getMonth(), tab: 'cal' });
-        this.showToast('추가 완료 · 모든 학생에게 공개됐어요');
       }
     };
   }
