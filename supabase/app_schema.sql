@@ -1,5 +1,8 @@
 -- 수행평가 달력 · Supabase schema (applied 2026-10-25 to project facewpuuybgtagihporn)
 --
+-- NOTE: migration_2026-11-03_roles_edit_images.sql was applied on top of this file
+-- (4 roles, item editing, password reset, rubric photos). Read both for the current state.
+--
 -- How it works
 -- * The page (index.html) only calls the public.app_* functions through /rest/v1/rpc
 --   with the publishable key. Tables have RLS on and no policies, so the key cannot

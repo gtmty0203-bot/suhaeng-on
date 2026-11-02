@@ -2277,8 +2277,8 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
     <div style="font-size:19px;font-weight:700;white-space:nowrap;flex:none">수행평가 달력</div>
     <div style="display:flex;align-items:center;gap:8px;min-width:0">
       <span style="font-size:13px;color:#555;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userLabel }}</span>
-      <sc-if value="{{ isAdmin }}">
-        <span style="font-size:11px;padding:3px 7px;border-radius:6px;background:#111;color:#fff;flex:none">관리자</span>
+      <sc-if value="{{ isStaff }}">
+        <span style="font-size:11px;padding:3px 7px;border-radius:6px;background:{{ roleBadgeBg }};color:#fff;flex:none;white-space:nowrap">{{ roleBadge }}</span>
       </sc-if>
       <button sc-camel-on-click="{{ changePw }}" style="border:1px solid #ddd;background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap;flex:none">비번 변경</button>
       <button sc-camel-on-click="{{ logout }}" style="border:1px solid #ddd;background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap;flex:none">로그아웃</button>
@@ -2290,9 +2290,9 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
     <div style="padding:0 18px 10px;font-size:13px;color:#666">다가오는 수행평가</div>
     <div style="display:flex;gap:12px;overflow-x:auto;padding:0 18px 6px;scrollbar-width:none">
       <sc-for list="{{ upcoming }}" as="u" hint-placeholder-count="5">
-        <button sc-camel-on-click="{{ u.onOpen }}" style="flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;border:none;background:none;padding:0;cursor:pointer;width:64px;animation:pop .45s ease both;animation-delay:{{ u.delay }};transition:transform .15s" style-active="transform:scale(.9)">
+        <button sc-camel-on-click="{{ u.onOpen }}" style="flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;border:none;background:none;padding:0;cursor:pointer;width:64px;opacity:{{ u.op }};animation:pop .45s ease both;animation-delay:{{ u.delay }};transition:transform .15s" style-active="transform:scale(.9)">
           <span style="width:60px;height:60px;border-radius:50%;border:2.5px solid {{ u.ring }};display:flex;align-items:center;justify-content:center;padding:3px;--rc:{{ u.ring }};animation:{{ u.ringAnim }}">
-            <span style="width:100%;height:100%;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">{{ u.dday }}</span>
+            <span style="width:100%;height:100%;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">{{ u.ddayShort }}</span>
           </span>
           <span style="font-size:12px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:64px">{{ u.subject }}</span>
         </button>
@@ -2303,12 +2303,25 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
   <div style="margin:12px 18px 0;padding:18px;border-radius:18px;background:#f5f5f5;display:flex;flex-direction:column;gap:12px;animation:heroIn .5s cubic-bezier(.2,.9,.3,1) .1s both">
     <div style="font-size:18px;font-weight:700;line-height:1.45;text-wrap:pretty">{{ headline }}</div>
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
-      <div style="font-size:13px;color:#555">{{ weekLabel }}</div>
-      <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums">{{ pctShown }}%</div>
+      <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <div style="font-size:12px;color:#888">{{ weekRange }}</div>
+        <div style="font-size:13px;color:#555">{{ weekLabel }}</div>
+      </div>
+      <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;flex:none">{{ pctShown }}%</div>
     </div>
     <div style="height:10px;border-radius:5px;background:#ddd;overflow:hidden">
-      <div style="height:100%;width:{{ weekPct }};background:{{ accent }};border-radius:5px;transition:width .8s cubic-bezier(.34,1.56,.64,1)"></div>
+      <div style="height:100%;width:{{ weekPct }};max-width:100%;background:{{ accent }};border-radius:5px;transition:width .8s cubic-bezier(.2,.9,.3,1)"></div>
     </div>
+    <sc-if value="{{ hasWeekDays }}">
+      <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px">
+        <sc-for list="{{ weekDays }}" as="wd">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <span style="font-size:11px;color:{{ wd.labelColor }};font-weight:{{ wd.weight }}">{{ wd.label }}</span>
+            <span style="width:100%;height:6px;border-radius:3px;background:{{ wd.bar }}"></span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
   </div>
   </sc-if>
 
@@ -2341,12 +2354,18 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
         <div style="padding:28px 0;text-align:center;font-size:14px;color:#999;background:#fafafa;border-radius:14px;animation:fadeUp .3s ease both;display:flex;flex-direction:column;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:50%;background:#ccc;animation:floaty 1.6s ease-in-out infinite"></span>이 날은 비어 있어요</div>
       </sc-if>
       <sc-for list="{{ selItems }}" as="it" hint-placeholder-count="1">
-        <div style="border:1px solid #e6e6e6;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:#fff;animation:fadeUp .35s ease both;animation-delay:{{ it.delay }}">
+        <div style="border:1px solid #e6e6e6;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:#fff;opacity:{{ it.cardOp }};animation:fadeUp .35s ease both;animation-delay:{{ it.delay }}">
           <div style="display:flex;align-items:center;gap:8px">
             <button sc-camel-on-click="{{ it.onDetail }}" style="font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;border:none;background:{{ it.color }};color:#fff;cursor:pointer;display:flex;align-items:center;gap:4px;transition:transform .15s" style-active="transform:scale(.92)">{{ it.subject }} <span style="opacity:.8">›</span></button>
             <span style="font-size:12px;font-weight:700">{{ it.dday }}</span>
-            <sc-if value="{{ it.isAdmin }}">
-              <button sc-camel-on-click="{{ it.onDelete }}" style="margin-left:auto;border:1px solid #ccc;background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer">삭제</button>
+            <sc-if value="{{ it.hasImg }}">
+              <span style="font-size:11px;color:#777;border:1px solid #ddd;border-radius:6px;padding:2px 6px">기준표 {{ it.img }}</span>
+            </sc-if>
+            <sc-if value="{{ it.isStaff }}">
+              <span style="margin-left:auto;display:flex;gap:6px">
+                <button sc-camel-on-click="{{ it.onEdit }}" style="border:1px solid #ccc;background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer">수정</button>
+                <button sc-camel-on-click="{{ it.onDelete }}" style="border:1px solid #ccc;background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer">삭제</button>
+              </span>
             </sc-if>
           </div>
           <div style="font-size:16px;font-weight:700">{{ it.title }}</div>
@@ -2360,22 +2379,47 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
 
   <sc-if value="{{ isList }}">
     <div style="padding:18px;display:flex;flex-direction:column;gap:10px;animation:fadeUp .35s ease both">
-      <div style="font-size:15px;font-weight:700">전체 일정</div>
-      <sc-if value="{{ noUpcoming }}">
-        <div style="padding:28px 0;text-align:center;font-size:14px;color:#999;background:#fafafa;border-radius:14px">남은 수행평가가 없어요</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:#efefef;border-radius:12px">
+        <button sc-camel-on-click="{{ listUp }}" style="height:40px;border:none;border-radius:9px;cursor:pointer;font-size:14px;background:{{ upTabBg }};font-weight:{{ upTabW }};transition:background .2s">다가오는 일정</button>
+        <button sc-camel-on-click="{{ listPast }}" style="height:40px;border:none;border-radius:9px;cursor:pointer;font-size:14px;background:{{ pastTabBg }};font-weight:{{ pastTabW }};transition:background .2s">지난 일정</button>
+      </div>
+      <sc-if value="{{ hasSubjChips }}">
+        <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -18px;padding:2px 18px 4px">
+          <sc-for list="{{ subjChips }}" as="sc">
+            <button sc-camel-on-click="{{ sc.onClick }}" style="flex:none;height:34px;padding:0 14px;border-radius:17px;border:1px solid {{ sc.border }};background:{{ sc.bg }};color:{{ sc.color }};font-size:13px;font-weight:{{ sc.weight }};cursor:pointer;white-space:nowrap;transition:background .2s,color .2s">{{ sc.label }}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noListItems }}">
+        <div style="padding:28px 0;text-align:center;font-size:14px;color:#999;background:#fafafa;border-radius:14px">{{ listEmptyText }}</div>
       </sc-if>
       <sc-for list="{{ listItems }}" as="it">
-        <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #f0f0f0;animation:fadeUp .35s ease both;animation-delay:{{ it.delay }}">
+        <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #f0f0f0;opacity:{{ it.rowOp }};animation:fadeUp .35s ease both;animation-delay:{{ it.delay }}">
           <button sc-camel-on-click="{{ it.onDetail }}" style="flex:1;min-width:0;display:flex;align-items:center;gap:14px;border:none;background:none;padding:0;cursor:pointer;text-align:left;transition:transform .15s" style-active="transform:scale(.97)">
             <span style="flex:none;width:52px;text-align:center;font-size:13px;font-weight:700;padding:8px 0;border-radius:10px;background:{{ it.color }};color:#fff">{{ it.dday }}</span>
             <span style="min-width:0;display:flex;flex-direction:column;gap:3px">
               <span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.title }}</span>
-              <span style="font-size:12px;color:#777">{{ it.subject }} · {{ it.dateLabel }}</span>
+              <span style="font-size:12px;color:#777">{{ it.subject }} · {{ it.dateLabel }}{{ it.imgNote }}</span>
             </span>
           </button>
           <button sc-camel-on-click="{{ it.onToggle }}" style="flex:none;width:44px;height:44px;border-radius:50%;border:1px solid {{ accent }};background:{{ it.doneBg }};color:{{ it.doneColor }};cursor:pointer;font-size:16px;transition:transform .15s,background .25s;display:flex;align-items:center;justify-content:center" style-active="transform:scale(.85)"><span style="display:block;animation:{{ it.checkAnim }}">✓</span></button>
         </div>
       </sc-for>
+      <sc-if value="{{ hasListDone }}">
+        <div style="font-size:13px;color:#888;padding:14px 0 2px">준비 완료 · {{ listDoneCount }}개</div>
+        <sc-for list="{{ listDone }}" as="it">
+          <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #f0f0f0;opacity:.5;animation:fadeUp .35s ease both;animation-delay:{{ it.delay }}">
+            <button sc-camel-on-click="{{ it.onDetail }}" style="flex:1;min-width:0;display:flex;align-items:center;gap:14px;border:none;background:none;padding:0;cursor:pointer;text-align:left;transition:transform .15s" style-active="transform:scale(.97)">
+              <span style="flex:none;width:52px;text-align:center;font-size:13px;font-weight:700;padding:8px 0;border-radius:10px;background:{{ it.color }};color:#fff">{{ it.dday }}</span>
+              <span style="min-width:0;display:flex;flex-direction:column;gap:3px">
+                <span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:line-through">{{ it.title }}</span>
+                <span style="font-size:12px;color:#777">{{ it.subject }} · {{ it.dateLabel }}{{ it.imgNote }}</span>
+              </span>
+            </button>
+            <button sc-camel-on-click="{{ it.onToggle }}" style="flex:none;width:44px;height:44px;border-radius:50%;border:1px solid {{ accent }};background:{{ it.doneBg }};color:{{ it.doneColor }};cursor:pointer;font-size:16px;transition:transform .15s,background .25s;display:flex;align-items:center;justify-content:center" style-active="transform:scale(.85)"><span style="display:block;animation:{{ it.checkAnim }}">✓</span></button>
+          </div>
+        </sc-for>
+      </sc-if>
     </div>
   </sc-if>
 
@@ -2383,10 +2427,16 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
     <div style="padding:18px;display:flex;flex-direction:column;gap:18px;animation:fadeUp .35s ease both">
       <div style="display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:16px;background:#f5f5f5">
         <div style="font-size:16px;font-weight:700">새 계정 만들기</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:#e6e6e6;border-radius:12px">
-          <button sc-camel-on-click="{{ newStudent }}" style="height:40px;border:none;border-radius:9px;cursor:pointer;font-size:14px;background:{{ stuTabBg }};font-weight:{{ stuTabW }};transition:background .2s">학생</button>
-          <button sc-camel-on-click="{{ newAdmin }}" style="height:40px;border:none;border-radius:9px;cursor:pointer;font-size:14px;background:{{ admTabBg }};font-weight:{{ admTabW }};transition:background .2s">관리자</button>
-        </div>
+        <sc-if value="{{ hasRoleTabs }}">
+          <div style="display:grid;grid-template-columns:repeat({{ roleTabN }},minmax(0,1fr));gap:4px;padding:4px;background:#e6e6e6;border-radius:12px">
+            <sc-for list="{{ roleTabs }}" as="rt">
+              <button sc-camel-on-click="{{ rt.onClick }}" style="height:40px;border:none;border-radius:9px;cursor:pointer;font-size:14px;background:{{ rt.bg }};font-weight:{{ rt.weight }};transition:background .2s">{{ rt.label }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hasRoleNote }}">
+          <div style="font-size:12px;color:#777;line-height:1.5">{{ roleNote }}</div>
+        </sc-if>
         <input value="{{ acc.name }}" sc-camel-on-change="{{ onAccName }}" placeholder="이름" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111;background:#fff">
         <input value="{{ acc.id }}" sc-camel-on-change="{{ onAccId }}" placeholder="{{ accIdPh }}" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111;background:#fff">
         <input value="{{ acc.pw }}" sc-camel-on-change="{{ onAccPw }}" placeholder="초기 비밀번호" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111;background:#fff">
@@ -2401,6 +2451,9 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
               <span style="font-size:15px;font-weight:600">{{ a.name }}</span>
               <span style="font-size:12px;color:#777">{{ a.roleLabel }} · {{ a.id }}</span>
             </span>
+            <sc-if value="{{ a.canReset }}">
+              <button sc-camel-on-click="{{ a.onReset }}" style="flex:none;border:1px solid #ccc;background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap">비번 초기화</button>
+            </sc-if>
             <sc-if value="{{ a.canDelete }}">
               <button sc-camel-on-click="{{ a.onDelete }}" style="flex:none;border:1px solid #ccc;background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer">삭제</button>
             </sc-if>
@@ -2422,7 +2475,7 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
     <button sc-camel-on-click="{{ goList }}" style="height:64px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:{{ listTabWeight }};color:{{ listTabColor }};transition:transform .15s" style-active="transform:scale(.9)">
       <span style="width:20px;height:20px;border-top:2px solid currentColor;border-bottom:2px solid currentColor;display:flex;align-items:center"><span style="width:100%;height:2px;background:currentColor"></span></span>전체 일정
     </button>
-    <sc-if value="{{ isAdmin }}">
+    <sc-if value="{{ isStaff }}">
       <button sc-camel-on-click="{{ goAccounts }}" style="height:64px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:{{ accTabWeight }};color:{{ accTabColor }};transition:transform .15s" style-active="transform:scale(.9)">
         <span style="width:20px;height:20px;border:2px solid currentColor;border-radius:50%"></span>계정 관리
       </button>
@@ -2447,7 +2500,27 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
       </div>
       <div style="font-size:21px;font-weight:700;line-height:1.35">{{ detail.title }}</div>
       <div style="font-size:15px;color:#333;line-height:1.7;white-space:pre-wrap;text-wrap:pretty">{{ detail.longText }}</div>
+      <sc-if value="{{ detail.hasImg }}">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:14px;font-weight:700">평가기준표</div>
+          <sc-if value="{{ detailImgLoading }}">
+            <div style="height:120px;border-radius:12px;background:#f3f3f3;display:flex;align-items:center;justify-content:center;font-size:13px;color:#999">사진 불러오는 중…</div>
+          </sc-if>
+          <sc-for list="{{ detailImgs }}" as="im">
+            <button sc-camel-on-click="{{ im.onOpen }}" style="border:1px solid #eee;border-radius:12px;padding:0;background:#fafafa;cursor:zoom-in;overflow:hidden;display:block;width:100%">
+              <img src="{{ im.src }}" alt="평가기준표" style="display:block;width:100%;height:auto">
+            </button>
+          </sc-for>
+          <div style="font-size:12px;color:#999">사진을 누르면 크게 볼 수 있어요</div>
+        </div>
+      </sc-if>
       <button sc-camel-on-click="{{ detail.onToggle }}" style="height:52px;border-radius:14px;border:1px solid {{ accent }};background:{{ detail.doneBg }};color:{{ detail.doneColor }};font-size:15px;font-weight:700;cursor:pointer;transition:transform .15s,background .25s,color .25s" style-active="transform:scale(.96)">{{ detail.doneLabel }}</button>
+      <sc-if value="{{ detail.isStaff }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button sc-camel-on-click="{{ detail.onEdit }}" style="height:46px;border-radius:12px;border:1px solid #ddd;background:#fff;font-size:14px;font-weight:600;cursor:pointer">수정하기</button>
+          <button sc-camel-on-click="{{ detail.onDelete }}" style="height:46px;border-radius:12px;border:1px solid #ddd;background:#fff;font-size:14px;font-weight:600;color:#c0392b;cursor:pointer">삭제하기</button>
+        </div>
+      </sc-if>
       <button sc-camel-on-click="{{ closeDetail }}" style="height:44px;border:none;background:none;font-size:14px;color:#777;cursor:pointer">닫기</button>
     </div>
   </sc-if>
@@ -2456,7 +2529,7 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
     <div sc-camel-on-click="{{ closeSheet }}" style="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10;animation:dimIn .25s ease both"></div>
     <div style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;background:#fff;border-radius:20px 20px 0 0;padding:10px 18px calc(18px + env(safe-area-inset-bottom));z-index:11;display:flex;flex-direction:column;gap:14px;animation:sheetUp .35s cubic-bezier(.2,.9,.3,1.1) both">
       <div style="width:40px;height:4px;border-radius:2px;background:#ddd;margin:0 auto"></div>
-      <div style="font-size:18px;font-weight:700">수행평가 추가</div>
+      <div style="font-size:18px;font-weight:700">{{ sheetTitle }}</div>
       <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#555">과목
         <input value="{{ form.subject }}" sc-camel-on-change="{{ onSubject }}" placeholder="예: 국어" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111">
       </label>
@@ -2472,7 +2545,76 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
       <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#555">자세한 설명
         <textarea value="{{ form.detail }}" sc-camel-on-change="{{ onDetailText }}" rows="5" placeholder="평가 범위, 준비물, 평가 기준, 배점 등" style="border:1px solid #ddd;border-radius:12px;padding:12px 14px;font-size:16px;color:#111;resize:none"></textarea>
       </label>
-      <button sc-camel-on-click="{{ submit }}" style="height:52px;border:none;border-radius:14px;background:{{ submitBg }};color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s" style-active="transform:scale(.97)">추가하고 모두에게 공개</button>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:13px;color:#555">평가기준표 사진 · {{ formImgCount }}/5</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ formImgs }}" as="fi">
+            <span style="position:relative;width:76px;height:76px;border-radius:10px;overflow:hidden;border:1px solid #e6e6e6;background:#f5f5f5;flex:none">
+              <img src="{{ fi.src }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+              <button sc-camel-on-click="{{ fi.onRemove }}" aria-label="사진 빼기" style="position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;border:none;background:rgba(0,0,0,.65);color:#fff;font-size:13px;line-height:24px;padding:0;cursor:pointer">✕</button>
+            </span>
+          </sc-for>
+          <sc-if value="{{ canAddImg }}">
+            <label style="width:76px;height:76px;border-radius:10px;border:1.5px dashed #bbb;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;color:#777;cursor:pointer;flex:none">
+              <span style="font-size:22px;line-height:1">+</span>{{ imgPickLabel }}
+              <input type="file" accept="image/*" sc-camel-on-change="{{ onPickImg }}" style="display:none">
+            </label>
+          </sc-if>
+        </div>
+      </div>
+      <button sc-camel-on-click="{{ submit }}" style="height:52px;border:none;border-radius:14px;background:{{ submitBg }};color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s" style-active="transform:scale(.97)">{{ submitLabel }}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ pwOpen }}">
+    <div sc-camel-on-click="{{ closePw }}" style="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:12;animation:dimIn .25s ease both"></div>
+    <div style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-radius:20px 20px 0 0;padding:10px 18px calc(18px + env(safe-area-inset-bottom));z-index:13;display:flex;flex-direction:column;gap:14px;animation:sheetUp .35s cubic-bezier(.2,.9,.3,1.1) both">
+      <div style="width:40px;height:4px;border-radius:2px;background:#ddd;margin:0 auto"></div>
+      <div style="font-size:18px;font-weight:700">{{ pwTitle }}</div>
+      <sc-if value="{{ pwIsChange }}">
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#555">지금 비밀번호
+          <input type="password" value="{{ pw.old }}" sc-camel-on-change="{{ onPwOld }}" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111">
+        </label>
+      </sc-if>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#555">새 비밀번호 (4자 이상)
+        <input type="{{ pwInputType }}" value="{{ pw.nw }}" sc-camel-on-change="{{ onPwNew }}" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111">
+      </label>
+      <sc-if value="{{ pwIsChange }}">
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#555">새 비밀번호 확인
+          <input type="password" value="{{ pw.again }}" sc-camel-on-change="{{ onPwAgain }}" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111">
+        </label>
+      </sc-if>
+      <sc-if value="{{ pwIsReset }}">
+        <div style="font-size:12px;color:#777;line-height:1.5">바꾸면 그 계정은 다른 기기에서도 로그아웃돼요. 새 비밀번호를 본인에게 알려주고, 로그인 후 직접 바꾸도록 안내해 주세요.</div>
+      </sc-if>
+      <button sc-camel-on-click="{{ submitPw }}" style="height:52px;border:none;border-radius:14px;background:{{ pwBtnBg }};color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s" style-active="transform:scale(.97)">{{ pwBtnLabel }}</button>
+      <button sc-camel-on-click="{{ closePw }}" style="height:40px;border:none;background:none;font-size:14px;color:#777;cursor:pointer">취소</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ confirmOpen }}">
+    <div sc-camel-on-click="{{ closeConfirm }}" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;animation:dimIn .2s ease both"></div>
+    <div style="position:fixed;inset:0;z-index:31;display:flex;align-items:center;justify-content:center;padding:24px;pointer-events:none">
+    <div style="pointer-events:auto;width:100%;max-width:340px;background:#fff;border-radius:18px;padding:22px 20px 16px;display:flex;flex-direction:column;gap:8px;animation:fadeUp .25s ease both;box-shadow:0 10px 40px rgba(0,0,0,.2)">
+      <div style="font-size:17px;font-weight:700;line-height:1.4;text-wrap:pretty">{{ confirmTitle }}</div>
+      <div style="font-size:14px;color:#666;line-height:1.5;text-wrap:pretty">{{ confirmText }}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <button sc-camel-on-click="{{ closeConfirm }}" style="height:48px;border:none;border-radius:12px;background:#f0f0f0;font-size:15px;font-weight:600;cursor:pointer">취소</button>
+        <button sc-camel-on-click="{{ okConfirm }}" style="height:48px;border:none;border-radius:12px;background:#E5533D;color:#fff;font-size:15px;font-weight:700;cursor:pointer">{{ confirmOk }}</button>
+      </div>
+    </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ viewerOpen }}">
+    <div style="position:fixed;inset:0;background:#000;z-index:40;display:flex;flex-direction:column;animation:dimIn .2s ease both">
+      <div style="flex:none;display:flex;justify-content:space-between;align-items:center;padding:calc(10px + env(safe-area-inset-top)) 12px 10px">
+        <button sc-camel-on-click="{{ toggleZoom }}" style="height:40px;padding:0 14px;border-radius:10px;border:1px solid #555;background:none;color:#fff;font-size:14px;cursor:pointer">{{ zoomLabel }}</button>
+        <button sc-camel-on-click="{{ closeViewer }}" style="height:40px;padding:0 14px;border-radius:10px;border:none;background:#fff;color:#111;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
+      </div>
+      <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;align-items:{{ viewerAlign }};justify-content:{{ viewerAlign }}">
+        <img src="{{ viewerSrc }}" alt="평가기준표" sc-camel-on-click="{{ toggleZoom }}" style="display:block;width:{{ viewerWidth }};max-width:none;height:auto;flex:none">
+      </div>
     </div>
   </sc-if>
 </div>
@@ -2502,11 +2644,29 @@ const MKEY = 'suhang-me';
 const ERR_MSG = {
   bad_login: '아이디나 비밀번호를 다시 확인해주세요',
   session_expired: '다시 로그인해주세요',
-  admin_only: '관리자만 할 수 있어요',
+  admin_only: '관리자나 반장만 할 수 있어요',
+  no_permission: '이 계정에는 그 권한이 없어요',
+  not_found: '이미 삭제됐거나 없는 항목이에요',
   id_taken: '이미 있는 아이디예요',
   pw_too_short: '비밀번호는 4자 이상이어야 해요',
-  cannot_delete_self: '내 계정은 삭제할 수 없어요'
+  cannot_delete_self: '내 계정은 삭제할 수 없어요',
+  too_many_images: '사진은 일정마다 5장까지 올릴 수 있어요',
+  image_too_big: '사진이 너무 커요',
+  bad_image: '이 사진은 올릴 수 없어요'
 };
+const ROLE_LABEL = { superadmin: '최고관리자', admin: '관리자', monitor: '반장', student: '학생' };
+const ROLE_BADGE_BG = { superadmin: '#111111', admin: '#555555', monitor: '#2F6FED' };
+const STAFF = ['superadmin', 'admin', 'monitor'];
+const isStaffRole = r => STAFF.includes(r);
+// mirrors app_private.can_manage in the database (the database is what actually enforces it)
+const canManage = (actor, action, target) =>
+  actor === 'superadmin' ? ['admin', 'monitor', 'student'].includes(target)
+  : actor === 'admin' ? ['monitor', 'student'].includes(target)
+  : actor === 'monitor' ? target === 'student' && (action === 'create' || action === 'reset')
+  : false;
+const CREATABLE = { superadmin: ['student', 'monitor', 'admin'], admin: ['student', 'monitor'], monitor: ['student'] };
+const MAX_IMGS = 5;
+const MAX_IMG_CHARS = 900000;
 async function rpc(fn, args) {
   let r;
   try {
@@ -2514,19 +2674,43 @@ async function rpc(fn, args) {
   } catch (e) { const err = new Error('network'); err.code = 'network'; throw err; }
   const txt = await r.text(); let body = null;
   try { body = txt ? JSON.parse(txt) : null; } catch (e) { body = null; }
-  if (!r.ok) { const err = new Error((body && body.message) || `HTTP ${r.status}`); err.code = (body && body.message) || 'server'; throw err; }
+  if (!r.ok) { const err = new Error((body && body.message) || `HTTP ${r.status}`); err.code = (body && body.message) || (r.status === 413 ? 'image_too_big' : 'server'); throw err; }
   return body;
 }
 const errText = e => ERR_MSG[e && e.code] || (e && e.code === 'network' ? '서버에 연결하지 못했어요. 잠시 후 다시 시도해주세요' : '문제가 생겼어요. 잠시 후 다시 시도해주세요');
 function loadJSON(k, fb) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; } catch (e) { return fb; } }
 function saveJSON(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage blocked */ } }
+// Shrinks a phone photo to a JPEG data URL small enough to store (text on a rubric stays readable at ~1800px).
+async function compressImage(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('decode')); i.src = url; });
+    const W = img.naturalWidth, H = img.naturalHeight;
+    if (!W || !H) throw new Error('decode');
+    let side = 1800;
+    const qs = [0.85, 0.78, 0.7, 0.62, 0.55, 0.5, 0.45];
+    for (let i = 0; i < qs.length; i++) {
+      const k = Math.min(1, side / Math.max(W, H));
+      const w = Math.max(1, Math.round(W * k)), h = Math.max(1, Math.round(H * k));
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
+      const data = c.toDataURL('image/jpeg', qs[i]);
+      if (data.startsWith('data:image/jpeg') && data.length <= MAX_IMG_CHARS) return data;
+      side = Math.round(side * 0.85);
+    }
+    throw new Error('too_big');
+  } finally { URL.revokeObjectURL(url); }
+}
+const emptyForm = date => ({ editId: null, subject: '', title: '', date, desc: '', detail: '', imgs: [], newImgs: [], rmImgs: [], imgsLoading: false });
+const emptyPw = (mode, target) => ({ mode, target: target || null, old: '', nw: '', again: '' });
 class Component extends DCLogic {
   constructor(p) {
     super(p);
     const t = new Date();
     const token = loadJSON(TKEY, null);
     const me = token ? loadJSON(MKEY, null) : null;
-    this.state = { items: [], done: {}, accounts: [], me, uid: me ? me.id : null, loading: !!me, busy: false, login: { id: '', pw: '' }, loginErr: '', acc: { role: 'student', name: '', id: '', pw: '' }, y: t.getFullYear(), m: t.getMonth(), sel: ymd(t), tab: 'cal', sheet: false, detailId: null, toast: '', burst: 0, monthTick: 0, monthDir: 'L', selTick: 0, pctShown: 0, errTick: 0, form: { subject: '', title: '', date: ymd(t), desc: '', detail: '' } };
+    this.state = { items: [], done: {}, accounts: [], me, uid: me ? me.id : null, loading: !!me, busy: false, login: { id: '', pw: '' }, loginErr: '', acc: { role: 'student', name: '', id: '', pw: '' }, y: t.getFullYear(), m: t.getMonth(), sel: ymd(t), tab: 'cal', sheet: false, detailId: null, toast: '', burst: 0, monthTick: 0, monthDir: 'L', selTick: 0, pctShown: 0, errTick: 0, form: emptyForm(ymd(t)), listMode: 'up', subj: '', imgCache: {}, imgBusy: false, viewer: null, zoom: false, confirm: null, pw: null };
+    this.imgReq = {};
   }
   componentDidMount() {
     this.onVisible = () => { if (document.visibilityState === 'visible') this.refresh(); };
@@ -2539,7 +2723,8 @@ class Component extends DCLogic {
   token() { return loadJSON(TKEY, null); }
   clearSession(msg) {
     saveJSON(TKEY, null); saveJSON(MKEY, null);
-    this.setState({ me: null, uid: null, items: [], done: {}, accounts: [], loading: false, sheet: false, detailId: null });
+    this.imgReq = {};
+    this.setState({ me: null, uid: null, items: [], done: {}, accounts: [], loading: false, sheet: false, detailId: null, imgCache: {}, viewer: null, confirm: null, pw: null, tab: 'cal' });
     if (msg) this.showToast(msg);
   }
   async refresh() {
@@ -2556,11 +2741,11 @@ class Component extends DCLogic {
     }
   }
   async call(fn, args, okMsg) {
-    try { await rpc(fn, { p_token: this.token(), ...args }); if (okMsg) this.showToast(okMsg); return true; }
+    try { const data = await rpc(fn, { p_token: this.token(), ...args }); if (okMsg) this.showToast(okMsg); return { data }; }
     catch (e) { if (e.code === 'session_expired') this.clearSession('다시 로그인해주세요'); else this.showToast(errText(e)); return false; }
     finally { this.refresh(); }
   }
-  componentDidUpdate() { this.countUp(); }
+  componentDidUpdate() { this.countUp(); this.ensureDetailImages(); }
   countUp() {
     const target = this.targetPct ?? 0;
     if (this.animTo === target) return;
@@ -2576,7 +2761,7 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { document.removeEventListener('visibilitychange', this.onVisible); window.removeEventListener('storage', this.onStorage); clearInterval(this.poll); clearTimeout(this.tt); clearTimeout(this.bt); cancelAnimationFrame(this.raf); }
   loginFail(msg) { this.setState(s => ({ loginErr: msg, errTick: s.errTick + 1 })); }
-  showToast(msg) { clearTimeout(this.tt); this.setState({ toast: '' }, () => this.setState({ toast: msg })); this.tt = setTimeout(() => this.setState({ toast: '' }), 2200); }
+  showToast(msg) { clearTimeout(this.tt); this.setState({ toast: '' }, () => this.setState({ toast: msg })); this.tt = setTimeout(() => this.setState({ toast: '' }), 2400); }
   user() { return this.state.me; }
   dday(date) {
     const t = new Date(); t.setHours(0, 0, 0, 0);
@@ -2605,9 +2790,92 @@ class Component extends DCLogic {
     });
     return h('div', { key: seedN, style: { position: 'fixed', left: '50%', top: '45%', width: 0, height: 0, zIndex: 30, pointerEvents: 'none' } }, parts);
   }
+  // ── 평가기준표 사진 ──
+  async loadImages(id, n) {
+    const c = this.state.imgCache[id];
+    if (c && c.n === n) return c.list;
+    const key = `${id}:${n}`;
+    if (!this.imgReq[key]) {
+      this.imgReq[key] = rpc('app_item_images', { p_token: this.token(), p_item_id: id })
+        .then(list => { this.setState(s => ({ imgCache: { ...s.imgCache, [id]: { n, list: list || [] } } })); return list || []; })
+        .catch(e => { delete this.imgReq[key]; if (e.code === 'session_expired') this.clearSession('다시 로그인해주세요'); else this.showToast('사진을 불러오지 못했어요'); return null; });
+    }
+    return this.imgReq[key];
+  }
+  ensureDetailImages() {
+    const s = this.state; if (!s.detailId) return;
+    const it = s.items.find(i => i.id === s.detailId);
+    if (!it || !it.img) return;
+    const c = s.imgCache[it.id];
+    if ((!c || c.n !== it.img) && !this.imgReq[`${it.id}:${it.img}`]) this.loadImages(it.id, it.img);
+  }
+  async pickImage(e) {
+    const f = e.target.files && e.target.files[0];
+    try { e.target.value = ''; } catch (err) { /* ignore */ }
+    if (!f) return;
+    const fm = this.state.form;
+    if (fm.imgs.length + fm.newImgs.length >= MAX_IMGS) return this.showToast('사진은 일정마다 5장까지 올릴 수 있어요');
+    if (f.type && !f.type.startsWith('image/')) return this.showToast('사진 파일만 올릴 수 있어요');
+    this.setState({ imgBusy: true });
+    try {
+      const data = await compressImage(f);
+      this.setState(s => ({ form: { ...s.form, newImgs: [...s.form.newImgs, data] } }));
+    } catch (err) {
+      this.showToast(err && err.message === 'too_big' ? '사진이 너무 커서 올릴 수 없어요' : '이 사진은 열 수 없어요. 다른 사진으로 해주세요');
+    } finally { this.setState({ imgBusy: false }); }
+  }
+  openNew() { this.setState(s => ({ sheet: true, form: emptyForm(s.sel) })); }
+  openEdit(it) {
+    const c = this.state.imgCache[it.id];
+    const fresh = !it.img || (c && c.n === it.img);
+    this.setState({
+      sheet: true, detailId: null,
+      form: { ...emptyForm(it.date), editId: it.id, subject: it.subject, title: it.title, date: it.date, desc: it.desc || '', detail: it.detail || '', imgs: fresh && c ? c.list : [], imgsLoading: !fresh }
+    });
+    if (!fresh) this.loadImages(it.id, it.img).then(list => {
+      if (this.state.form.editId !== it.id) return;
+      this.setState(s => ({ form: { ...s.form, imgs: list || [], imgsLoading: false } }));
+    });
+  }
+  async submitForm() {
+    const f = this.state.form;
+    if (!(f.subject.trim() && f.title.trim() && f.date)) return this.showToast('과목, 제목, 날짜를 입력해주세요');
+    if (this.state.busy || this.state.imgBusy) return;
+    if (f.imgsLoading) return this.showToast('사진을 불러오는 중이에요. 잠시만요');
+    this.setState({ busy: true });
+    const token = this.token();
+    const args = { p_token: token, p_subject: f.subject.trim(), p_title: f.title.trim(), p_date: f.date, p_desc: f.desc.trim(), p_detail: f.detail.trim() };
+    let id = f.editId; let failed = 0;
+    try {
+      if (id) await rpc('app_update_item', { ...args, p_item_id: id });
+      else id = await rpc('app_add_item', args);
+      for (const imgId of f.rmImgs) { try { await rpc('app_delete_image', { p_token: token, p_image_id: imgId }); } catch (e) { failed++; } }
+      for (const data of f.newImgs) { try { await rpc('app_add_image', { p_token: token, p_item_id: id, p_data: data }); } catch (e) { if (e.code === 'session_expired') throw e; failed++; } }
+    } catch (e) {
+      this.setState({ busy: false });
+      if (e.code === 'session_expired') return this.clearSession('다시 로그인해주세요');
+      if (!id || f.editId) { this.showToast(errText(e)); this.refresh(); return; }
+    }
+    const d = parse(f.date);
+    this.setState(s => {
+      const imgCache = { ...s.imgCache }; delete imgCache[id];
+      return { busy: false, sheet: false, imgCache, sel: f.date, y: d.getFullYear(), m: d.getMonth(), tab: s.tab === 'accounts' ? 'cal' : s.tab };
+    });
+    Object.keys(this.imgReq).forEach(k => { if (k.startsWith(`${id}:`)) delete this.imgReq[k]; });
+    this.showToast(failed ? `일정은 저장했지만 사진 ${failed}장은 처리하지 못했어요` : f.editId ? '수정했어요 · 모두에게 바로 보여요' : '추가 완료 · 모든 학생에게 공개됐어요');
+    this.refresh();
+  }
+  askConfirm(title, text, ok, onOk) { this.setState({ confirm: { title, text, ok, onOk } }); }
+  deleteItem(it) {
+    this.askConfirm(`'${it.title}' 일정을 삭제할까요?`, '학생들 달력에서도 바로 사라져요.', '삭제', () => {
+      this.setState(st => ({ items: st.items.filter(x => x.id !== it.id), detailId: null }));
+      this.call('app_delete_item', { p_item_id: it.id }, '삭제되었어요');
+    });
+  }
   setForm(k, v) { this.setState(s => ({ form: { ...s.form, [k]: v } })); }
   setLogin(k, v) { this.setState(s => ({ login: { ...s.login, [k]: v }, loginErr: '' })); }
   setAcc(k, v) { this.setState(s => ({ acc: { ...s.acc, [k]: v } })); }
+  setPw(k, v) { this.setState(s => ({ pw: s.pw ? { ...s.pw, [k]: v } : s.pw })); }
   async doLogin() {
     const { id, pw } = this.state.login;
     if (!id.trim()) return this.loginFail('아이디를 입력해주세요');
@@ -2628,22 +2896,27 @@ class Component extends DCLogic {
     if (token) rpc('app_logout', { p_token: token }).catch(() => {});
     this.clearSession();
   }
-  async changePw() {
-    const oldPw = prompt('지금 비밀번호를 입력해주세요'); if (oldPw == null) return;
-    const newPw = prompt('새 비밀번호를 입력해주세요 (4자 이상)'); if (newPw == null) return;
-    if (newPw.trim().length < 4) return this.showToast('비밀번호는 4자 이상이어야 해요');
-    const again = prompt('새 비밀번호를 한 번 더 입력해주세요'); if (again == null) return;
-    if (again !== newPw) return this.showToast('새 비밀번호가 서로 달라요');
-    this.call('app_change_password', { p_old: oldPw, p_new: newPw }, '비밀번호를 바꿨어요');
+  async submitPw() {
+    const p = this.state.pw; if (!p || this.state.busy) return;
+    if (p.mode === 'change' && !p.old) return this.showToast('지금 비밀번호를 입력해주세요');
+    if (p.nw.trim().length < 4) return this.showToast('비밀번호는 4자 이상이어야 해요');
+    if (p.mode === 'change' && p.again !== p.nw) return this.showToast('새 비밀번호가 서로 달라요');
+    this.setState({ busy: true });
+    const ok = p.mode === 'change'
+      ? await this.call('app_change_password', { p_old: p.old, p_new: p.nw }, '비밀번호를 바꿨어요')
+      : await this.call('app_reset_password', { p_id: p.target.id, p_new: p.nw }, `${p.target.name} 비밀번호를 초기화했어요`);
+    this.setState({ busy: false, ...(ok ? { pw: null } : {}) });
   }
   async createAcc() {
     const a = this.state.acc; const name = a.name.trim(); const id = a.id.trim(); const pw = a.pw.trim();
+    const me = this.user(); const role = (CREATABLE[me && me.role] || []).includes(a.role) ? a.role : 'student';
     if (!name || !id || !pw) return this.showToast('이름, 아이디, 비밀번호를 모두 입력해주세요');
+    if (pw.length < 4) return this.showToast('비밀번호는 4자 이상이어야 해요');
     if (this.state.accounts.some(x => x.id === id)) return this.showToast('이미 있는 아이디예요');
     if (this.state.busy) return;
     this.setState({ busy: true });
-    const ok = await this.call('app_create_account', { p_id: id, p_pw: pw, p_name: name, p_role: a.role }, `${name} 계정을 만들었어요`);
-    this.setState({ busy: false, ...(ok ? { acc: { role: a.role, name: '', id: '', pw: '' } } : {}) });
+    const ok = await this.call('app_create_account', { p_id: id, p_pw: pw, p_name: name, p_role: role }, `${name} ${ROLE_LABEL[role]} 계정을 만들었어요`);
+    this.setState({ busy: false, ...(ok ? { acc: { role, name: '', id: '', pw: '' } } : {}) });
   }
   renderVals() {
     const s = this.state; const p = this.props; const today = ymd(new Date());
@@ -2651,10 +2924,13 @@ class Component extends DCLogic {
     const font = FONTS[p.font] || FONTS['머니그라피'];
     const bg = BGS[p.background] || '#ffffff';
     const user = this.user();
-    const isAdmin = !!(user && user.role === 'admin');
-    const tab = !isAdmin && s.tab === 'accounts' ? 'cal' : s.tab;
+    const myRole = user ? user.role : '';
+    const isStaff = isStaffRole(myRole);
+    const tab = !isStaff && s.tab === 'accounts' ? 'cal' : s.tab;
     const done = this.myDone();
-    const items = [...s.items].sort((a, b) => a.date.localeCompare(b.date));
+    const byDateThenId = (a, b) => a.date.localeCompare(b.date) || a.id - b.id;
+    const todoFirst = (a, b) => (done[a.id] ? 1 : 0) - (done[b.id] ? 1 : 0) || byDateThenId(a, b);
+    const items = [...s.items].sort(byDateThenId);
     const byDate = {}; items.forEach(i => (byDate[i.date] = byDate[i.date] || []).push(i));
     const first = new Date(s.y, s.m, 1); const start = new Date(s.y, s.m, 1 - first.getDay());
     const weeks = Math.ceil((first.getDay() + new Date(s.y, s.m + 1, 0).getDate()) / 7);
@@ -2668,40 +2944,58 @@ class Component extends DCLogic {
         color: isSel ? '#fff' : inMonth ? '#111' : '#bbb',
         weight: isSel || isToday ? 700 : 400,
         outline: isToday && !isSel ? `1px solid ${accent}` : 'none',
-        dots: (byDate[k] || []).slice(0, 3).map(it => ({ bg: done[it.id] ? '#ccc' : subjColor(it.subject) })),
+        dots: [...(byDate[k] || [])].sort(todoFirst).slice(0, 3).map(it => ({ bg: done[it.id] ? '#ccc' : subjColor(it.subject) })),
         anim: isSel && s.selTick ? `selPop${s.selTick % 2} .45s ease` : 'none',
         onClick: () => this.setState(st => ({ sel: k, selTick: st.selTick + 1, ...(inMonth ? {} : { y: d.getFullYear(), m: d.getMonth(), monthTick: st.monthTick + 1, monthDir: d < first ? 'R' : 'L' }) }))
       });
     }
     const deco = (it, idx = 0) => {
-      const d = parse(it.date); const c = subjColor(it.subject);
+      const d = parse(it.date); const c = subjColor(it.subject); const isDone = !!done[it.id];
       return {
-        ...it, dday: this.dday(it.date), isAdmin, color: c, delay: `${Math.min(idx, 10) * 50}ms`,
+        ...it, dday: this.dday(it.date), ddayShort: isDone ? '✓' : this.dday(it.date), isStaff, color: c, delay: `${Math.min(idx, 10) * 50}ms`,
+        op: isDone ? 0.45 : 1, cardOp: isDone ? 0.65 : 1, rowOp: 1,
+        hasImg: !!it.img, imgNote: it.img ? ` · 기준표 ${it.img}장` : '',
         dateLabel: `${d.getMonth() + 1}월 ${d.getDate()}일 (${WD[d.getDay()]})`,
         longText: it.detail || it.desc || '자세한 설명이 없어요',
-        doneBg: done[it.id] ? accent : '#fff', doneColor: done[it.id] ? '#fff' : accent,
-        doneLabel: done[it.id] ? '✓ 준비 완료' : '준비 완료 체크하기',
-        ring: done[it.id] ? '#ccc' : c,
-        ringAnim: !done[it.id] && it.date >= today && parse(it.date) - parse(today) <= 86400000 ? 'ringPulse 1.8s ease-out infinite' : 'none',
-        doneAnim: done[it.id] ? 'donePop .45s ease' : 'none',
-        checkAnim: done[it.id] ? 'checkIn .4s ease' : 'none',
+        doneBg: isDone ? accent : '#fff', doneColor: isDone ? '#fff' : accent,
+        doneLabel: isDone ? '✓ 준비 완료' : '준비 완료 체크하기',
+        ring: isDone ? '#ccc' : c,
+        ringAnim: !isDone && it.date >= today && parse(it.date) - parse(today) <= 86400000 ? 'ringPulse 1.8s ease-out infinite' : 'none',
+        doneAnim: isDone ? 'donePop .45s ease' : 'none',
+        checkAnim: isDone ? 'checkIn .4s ease' : 'none',
         onToggle: () => this.toggleDone(it.id),
         onDetail: () => this.setState({ detailId: it.id }),
-        onDelete: () => { if (!confirm(`'${it.title}'을(를) 삭제할까요?`)) return; this.setState(st => ({ items: st.items.filter(x => x.id !== it.id), detailId: null })); this.call('app_delete_item', { p_item_id: it.id }, '삭제되었어요'); },
+        onEdit: () => this.openEdit(it),
+        onDelete: () => this.deleteItem(it),
         onOpen: () => { this.setState({ tab: 'cal', sel: it.date, y: d.getFullYear(), m: d.getMonth() }); window.scrollTo(0, 0); }
       };
     };
     const up = items.filter(i => i.date >= today);
+    const past = items.filter(i => i.date < today).reverse();
     const selD = parse(s.sel);
+
+    // 이번 주 = 월요일~일요일 (지난 요일의 일정도 포함)
     const t0 = new Date(); t0.setHours(0, 0, 0, 0);
-    const wEnd = ymd(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() + 7));
-    const week = up.filter(i => i.date < wEnd); const wDone = week.filter(i => done[i.id]).length;
-    const selItems = (byDate[s.sel] || []).map(deco);
+    const mon = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() - ((t0.getDay() + 6) % 7));
+    const wDates = Array.from({ length: 7 }, (_, i) => new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i));
+    const wStart = ymd(wDates[0]); const wLast = ymd(wDates[6]);
+    const week = items.filter(i => i.date >= wStart && i.date <= wLast);
+    const wDone = week.filter(i => done[i.id]).length;
+    const md = d => `${d.getMonth() + 1}월 ${d.getDate()}일`;
+    const weekDays = wDates.map(d => {
+      const k = ymd(d); const list = byDate[k] || []; const n = list.length; const dn = list.filter(i => done[i.id]).length;
+      return {
+        key: k, label: WD[d.getDay()], weight: k === today ? 700 : 400, labelColor: k === today ? accent : '#888',
+        bar: !n ? '#e9e9e9' : dn === n ? accent : dn ? `linear-gradient(90deg, ${accent} ${Math.round(dn / n * 100)}%, #bdbdbd ${Math.round(dn / n * 100)}%)` : '#bdbdbd'
+      };
+    });
+
+    const selItems = [...(byDate[s.sel] || [])].sort(todoFirst).map(deco);
     const detailItem = s.items.find(i => i.id === s.detailId);
     const f = s.form; const valid = f.subject.trim() && f.title.trim() && f.date;
     const ac = s.acc; const accValid = ac.name.trim() && ac.id.trim() && ac.pw.trim();
     const tabStyle = t => ({ w: tab === t ? 700 : 400, c: tab === t ? accent : '#999' });
-    const tabs = isAdmin ? ['cal', 'list', 'accounts'] : ['cal', 'list'];
+    const tabs = isStaff ? ['cal', 'list', 'accounts'] : ['cal', 'list'];
     this.targetPct = week.length ? Math.round(wDone / week.length * 100) : 0;
     const nx = up.find(i => !done[i.id]);
     let headline = s.loading ? '일정을 불러오는 중이에요' : '남은 수행평가가 없어요. 오늘은 푹 쉬어요';
@@ -2710,18 +3004,48 @@ class Component extends DCLogic {
       const when = n === 0 ? '오늘' : n === 1 ? '내일' : n === 2 ? '모레' : `${n}일 뒤에`;
       headline = `${user.name}님, ${when} ${nx.subject} ${nx.title} 있어요`;
     } else if (user && up.length) headline = `${user.name}님, 남은 건 전부 준비했어요`;
+
+    // 전체 일정 탭: 다가오는/지난 + 과목 필터
+    const subjects = [...new Set(items.map(i => i.subject.trim()))].sort((a, b) => a.localeCompare(b, 'ko'));
+    const subj = subjects.includes(s.subj) ? s.subj : '';
+    const bySubj = list => (subj ? list.filter(i => i.subject.trim() === subj) : list);
+    const isPast = s.listMode === 'past';
+    const upF = bySubj(up);
+    const listTodo = isPast ? bySubj(past) : upF.filter(i => !done[i.id]);
+    const listDoneL = isPast ? [] : upF.filter(i => done[i.id]);
+    const listEmptyText = isPast ? (subj ? `${subj} 지난 일정이 없어요` : '지난 일정이 없어요')
+      : listDoneL.length ? '다가오는 수행평가는 모두 준비했어요' : (subj ? `${subj} 다가오는 일정이 없어요` : '다가오는 수행평가가 없어요');
+    const chip = (label, val) => ({ key: label, label, bg: subj === val ? accent : '#fff', color: subj === val ? '#fff' : '#333', border: subj === val ? accent : '#ddd', weight: subj === val ? 700 : 400, onClick: () => this.setState({ subj: val }) });
+
+    // 계정 관리
+    const creatable = CREATABLE[myRole] || [];
+    const accRole = creatable.includes(ac.role) ? ac.role : 'student';
+    const roleNote = myRole === 'monitor' ? '반장은 학생 계정을 만들고 학생 비밀번호를 초기화할 수 있어요.' : myRole === 'admin' ? '관리자 계정은 최고관리자만 만들거나 삭제할 수 있어요.' : '';
+
+    // 사진
+    const dImgC = detailItem && detailItem.img ? s.imgCache[detailItem.id] : null;
+    const dImgFresh = !!(dImgC && dImgC.n === detailItem.img);
+    const formImgCount = f.imgs.length + f.newImgs.length;
+    const formImgs = [
+      ...f.imgs.map(im => ({ key: `o${im.id}`, src: im.data, onRemove: () => this.setState(st => ({ form: { ...st.form, imgs: st.form.imgs.filter(x => x.id !== im.id), rmImgs: [...st.form.rmImgs, im.id] } })) })),
+      ...f.newImgs.map((src, i) => ({ key: `n${i}`, src, onRemove: () => this.setState(st => ({ form: { ...st.form, newImgs: st.form.newImgs.filter((_, j) => j !== i) } })) }))
+    ];
+    const pw = s.pw;
+
     return {
       accent, font, bg, confetti: this.renderConfetti(),
       loggedOut: !user, loggedIn: !!user,
       login: s.login, onLoginId: e => this.setLogin('id', e.target.value), onLoginPw: e => this.setLogin('pw', e.target.value),
       hasLoginErr: !!s.loginErr, loginErr: s.loginErr, doLogin: () => this.doLogin(),
-      logout: () => this.logout(), changePw: () => this.changePw(), loginBtnLabel: s.busy ? '로그인 중…' : '로그인',
-      userLabel: user ? (user.role === 'student' ? `${user.id} ${user.name}` : user.name) : '',
-      isAdmin, showFab: isAdmin && tab !== 'accounts',
-      upcoming: up.slice(0, 12).map(deco),
-      weekTitle: user ? `${user.name}님의 이번 주 준비` : '',
-      weekLabel: week.length ? `${week.length}개 중 ${wDone}개 완료` : '이번 주 일정 없음',
+      logout: () => this.logout(), changePw: () => this.setState({ pw: emptyPw('change') }), loginBtnLabel: s.busy ? '로그인 중…' : '로그인',
+      userLabel: user ? (myRole === 'student' ? `${user.id} ${user.name}` : user.name) : '',
+      isStaff, roleBadge: ROLE_LABEL[myRole] || '', roleBadgeBg: ROLE_BADGE_BG[myRole] || '#111',
+      showFab: isStaff && tab !== 'accounts',
+      upcoming: [...up].sort(todoFirst).slice(0, 12).map(deco),
+      weekRange: `이번 주 ${md(wDates[0])}(월) ~ ${md(wDates[6])}(일)`,
+      weekLabel: week.length ? `${week.length}개 중 ${wDone}개 준비 완료` : '이번 주 수행평가가 없어요',
       weekPct: week.length ? `${Math.round(wDone / week.length * 100)}%` : '0%',
+      weekDays, hasWeekDays: week.length > 0,
       isCal: tab === 'cal', isList: tab === 'list', isAccounts: tab === 'accounts', notAccounts: tab !== 'accounts',
       monthLabel: `${s.y}년 ${s.m + 1}월`,
       prevMonth: () => this.setState(st => ({ y: st.m ? st.y : st.y - 1, m: st.m ? st.m - 1 : 11, monthTick: st.monthTick + 1, monthDir: 'R' })),
@@ -2732,43 +3056,65 @@ class Component extends DCLogic {
       tabLeft: `${(Math.max(0, tabs.indexOf(tab)) / tabs.length) * 100}%`, tabWidth: `${100 / tabs.length}%`,
       cells, selItems, noSelItems: !selItems.length,
       selLabel: `${selD.getMonth() + 1}월 ${selD.getDate()}일 (${WD[selD.getDay()]})`,
-      listItems: up.map(deco), noUpcoming: !up.length,
+      listUp: () => this.setState({ listMode: 'up' }), listPast: () => this.setState({ listMode: 'past' }),
+      upTabBg: isPast ? 'transparent' : '#fff', upTabW: isPast ? 400 : 700,
+      pastTabBg: isPast ? '#fff' : 'transparent', pastTabW: isPast ? 700 : 400,
+      hasSubjChips: subjects.length > 1, subjChips: [chip('전체', ''), ...subjects.map(x => chip(x, x))],
+      listItems: listTodo.map(deco), noListItems: !listTodo.length, listEmptyText,
+      listDone: listDoneL.map(deco), hasListDone: listDoneL.length > 0, listDoneCount: listDoneL.length,
       goCal: () => this.setState({ tab: 'cal' }), goList: () => this.setState({ tab: 'list' }), goAccounts: () => this.setState({ tab: 'accounts' }),
       calTabWeight: tabStyle('cal').w, calTabColor: tabStyle('cal').c,
       listTabWeight: tabStyle('list').w, listTabColor: tabStyle('list').c,
       accTabWeight: tabStyle('accounts').w, accTabColor: tabStyle('accounts').c,
-      acc: ac, accIdPh: ac.role === 'student' ? '아이디 (학번)' : '아이디',
-      stuTabBg: ac.role === 'student' ? '#fff' : 'transparent', stuTabW: ac.role === 'student' ? 700 : 400,
-      admTabBg: ac.role === 'admin' ? '#fff' : 'transparent', admTabW: ac.role === 'admin' ? 700 : 400,
-      newStudent: () => this.setAcc('role', 'student'), newAdmin: () => this.setAcc('role', 'admin'),
+      acc: ac, accIdPh: accRole === 'student' || accRole === 'monitor' ? '아이디 (학번)' : '아이디',
+      hasRoleTabs: creatable.length > 1, roleTabN: creatable.length,
+      roleTabs: creatable.map(r => ({ key: r, label: ROLE_LABEL[r], bg: accRole === r ? '#fff' : 'transparent', weight: accRole === r ? 700 : 400, onClick: () => this.setAcc('role', r) })),
+      hasRoleNote: !!roleNote, roleNote,
       onAccName: e => this.setAcc('name', e.target.value), onAccId: e => this.setAcc('id', e.target.value), onAccPw: e => this.setAcc('pw', e.target.value),
       accBtnBg: accValid ? accent : '#bbb', createAcc: () => this.createAcc(),
       accCount: s.accounts.length,
       accounts: s.accounts.map((a, i) => ({
-        ...a, initial: a.name.slice(0, 1), roleLabel: a.role === 'admin' ? '관리자' : '학생', delay: `${Math.min(i, 10) * 40}ms`,
-        canDelete: a.id !== s.uid,
-        onDelete: () => { if (!confirm(`${a.name} 계정을 삭제할까요?`)) return; this.setState(st => ({ accounts: st.accounts.filter(x => x.id !== a.id) })); this.call('app_delete_account', { p_id: a.id }, '계정을 삭제했어요'); }
+        ...a, initial: a.name.slice(0, 1), roleLabel: ROLE_LABEL[a.role] || a.role, delay: `${Math.min(i, 10) * 40}ms`,
+        canDelete: a.id !== s.uid && canManage(myRole, 'delete', a.role),
+        canReset: a.id !== s.uid && canManage(myRole, 'reset', a.role),
+        onReset: () => this.setState({ pw: emptyPw('reset', { id: a.id, name: a.name }) }),
+        onDelete: () => this.askConfirm(`${a.name}(${a.id}) 계정을 삭제할까요?`, '이 계정으로는 더 이상 로그인할 수 없어요.', '삭제', () => {
+          this.setState(st => ({ accounts: st.accounts.filter(x => x.id !== a.id) }));
+          this.call('app_delete_account', { p_id: a.id }, '계정을 삭제했어요');
+        })
       })),
       hasToast: !!s.toast, toast: s.toast,
       detailOpen: !!detailItem, detail: detailItem ? deco(detailItem) : {},
+      detailImgLoading: !!(detailItem && detailItem.img && !dImgFresh),
+      detailImgs: dImgFresh ? dImgC.list.map(im => ({ key: im.id, src: im.data, onOpen: () => this.setState({ viewer: im.data, zoom: false }) })) : [],
       closeDetail: () => this.setState({ detailId: null }),
       sheetOpen: s.sheet, form: f,
-      openSheet: () => this.setState({ sheet: true, form: { subject: '', title: '', date: s.sel, desc: '', detail: '' } }),
-      closeSheet: () => this.setState({ sheet: false }),
+      sheetTitle: f.editId ? '수행평가 수정' : '수행평가 추가',
+      submitLabel: s.busy ? '저장하는 중…' : f.editId ? '수정 내용 저장' : '추가하고 모두에게 공개',
+      openSheet: () => this.openNew(),
+      closeSheet: () => { if (!s.busy) this.setState({ sheet: false }); },
       onSubject: e => this.setForm('subject', e.target.value), onTitle: e => this.setForm('title', e.target.value),
       onDate: e => this.setForm('date', e.target.value), onDesc: e => this.setForm('desc', e.target.value),
       onDetailText: e => this.setForm('detail', e.target.value),
-      submitBg: valid ? accent : '#bbb',
-      submit: async () => {
-        if (!valid) { this.showToast('과목, 제목, 날짜를 입력해주세요'); return; }
-        if (s.busy) return;
-        this.setState({ busy: true });
-        const ok = await this.call('app_add_item', { p_subject: f.subject.trim(), p_title: f.title.trim(), p_date: f.date, p_desc: f.desc.trim(), p_detail: f.detail.trim() }, '추가 완료 · 모든 학생에게 공개됐어요');
-        this.setState({ busy: false });
-        if (!ok) return;
-        const d = parse(f.date);
-        this.setState({ sheet: false, sel: f.date, y: d.getFullYear(), m: d.getMonth(), tab: 'cal' });
-      }
+      formImgs, formImgCount, canAddImg: formImgCount < MAX_IMGS && !f.imgsLoading,
+      imgPickLabel: s.imgBusy ? '줄이는 중…' : f.imgsLoading ? '불러오는 중' : '사진 추가',
+      onPickImg: e => this.pickImage(e),
+      submitBg: valid && !s.busy && !s.imgBusy ? accent : '#bbb',
+      submit: () => this.submitForm(),
+      pwOpen: !!pw, pw: pw || emptyPw('change'),
+      pwIsChange: !!pw && pw.mode === 'change', pwIsReset: !!pw && pw.mode === 'reset',
+      pwTitle: pw && pw.mode === 'reset' ? `${pw.target.name}(${pw.target.id}) 비밀번호 초기화` : '비밀번호 변경',
+      pwInputType: pw && pw.mode === 'reset' ? 'text' : 'password',
+      onPwOld: e => this.setPw('old', e.target.value), onPwNew: e => this.setPw('nw', e.target.value), onPwAgain: e => this.setPw('again', e.target.value),
+      pwBtnBg: pw && pw.nw.trim().length >= 4 && !s.busy ? accent : '#bbb',
+      pwBtnLabel: s.busy ? '바꾸는 중…' : pw && pw.mode === 'reset' ? '초기화하기' : '바꾸기',
+      submitPw: () => this.submitPw(), closePw: () => { if (!s.busy) this.setState({ pw: null }); },
+      confirmOpen: !!s.confirm, confirmTitle: s.confirm ? s.confirm.title : '', confirmText: s.confirm ? s.confirm.text : '', confirmOk: s.confirm ? s.confirm.ok : '',
+      closeConfirm: () => this.setState({ confirm: null }),
+      okConfirm: () => { const c = s.confirm; this.setState({ confirm: null }); if (c) c.onOk(); },
+      viewerOpen: !!s.viewer, viewerSrc: s.viewer || '', viewerWidth: s.zoom ? '250%' : '100%', viewerAlign: s.zoom ? 'flex-start' : 'center',
+      zoomLabel: s.zoom ? '화면에 맞추기' : '확대하기',
+      toggleZoom: () => this.setState(st => ({ zoom: !st.zoom })), closeViewer: () => this.setState({ viewer: null, zoom: false })
     };
   }
 }
