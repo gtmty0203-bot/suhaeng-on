@@ -2369,7 +2369,7 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
           </div>
           <div style="font-size:16px;font-weight:700">{{ it.title }}</div>
           <div style="font-size:14px;color:#555;line-height:1.5;text-wrap:pretty">{{ it.desc }}</div>
-          <button data-testid="sel-detail" sc-camel-on-click="{{ it.onDetail }}" style="margin-top:4px;height:44px;border-radius:12px;border:1px solid #ddd;background:#fff;color:#111;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform .15s" style-active="transform:scale(.96)">자세히 보기 <span style="color:#999">›</span></button>
+          <button data-testid="sel-detail" sc-camel-on-click="{{ it.onDetail }}" style="margin-top:4px;height:44px;border-radius:12px;border:1px solid {{ accent }};background:#fff;color:{{ accent }};font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform .15s" style-active="transform:scale(.96)">자세히 보기 <span style="opacity:.6">›</span></button>
           <button sc-camel-on-click="{{ it.onToggle }}" style="height:44px;border-radius:12px;border:1px solid {{ accent }};background:{{ it.doneBg }};color:{{ it.doneColor }};font-size:14px;font-weight:600;cursor:pointer;transition:transform .15s,background .25s,color .25s;animation:{{ it.doneAnim }}" style-active="transform:scale(.96)">{{ it.doneLabel }}</button>
         </div>
       </sc-for>
