@@ -2290,7 +2290,8 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
     <div style="padding:0 18px 10px;font-size:13px;color:#666">다가오는 수행평가</div>
     <div style="display:flex;gap:12px;overflow-x:auto;padding:0 18px 6px;scrollbar-width:none">
       <sc-for list="{{ upcoming }}" as="u" hint-placeholder-count="5">
-        <button sc-camel-on-click="{{ u.onOpen }}" style="flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;border:none;background:none;padding:0;cursor:pointer;width:64px;opacity:{{ u.op }};animation:pop .45s ease both;animation-delay:{{ u.delay }};transition:transform .15s" style-active="transform:scale(.9)">
+        <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;width:64px;opacity:{{ u.op }};animation:pop .45s ease both;animation-delay:{{ u.delay }}">
+        <button sc-camel-on-click="{{ u.onOpen }}" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:none;background:none;padding:0;cursor:pointer;width:64px;transition:transform .15s" style-active="transform:scale(.9)">
           <span style="width:60px;height:60px;border-radius:50%;border:2.5px solid {{ u.ring }};display:flex;align-items:center;justify-content:center;padding:3px;--rc:{{ u.ring }};animation:{{ u.ringAnim }}">
             <span style="width:100%;height:100%;border-radius:50%;background:{{ u.innerBg }};color:{{ u.innerColor }};display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:700;line-height:1.1;transition:background .25s,color .25s">
               <sc-if value="{{ u.isDone }}"><span style="font-size:17px;animation:checkIn .4s ease both">✓</span><span style="font-size:10px;font-weight:600;margin-top:1px">완료</span></sc-if>
@@ -2299,6 +2300,8 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
           </span>
           <span style="font-size:12px;color:{{ u.subjLabelColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:64px">{{ u.subject }}</span>
         </button>
+        <button data-testid="up-toggle" sc-camel-on-click="{{ u.onToggle }}" aria-label="{{ u.pillAria }}" style="height:26px;min-width:58px;padding:0 8px;border-radius:13px;border:1px solid {{ u.pillBorder }};background:{{ u.pillBg }};color:{{ u.pillColor }};font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:transform .15s,background .25s,color .25s" style-active="transform:scale(.9)">{{ u.pillLabel }}</button>
+        </div>
       </sc-for>
     </div>
   </div>
@@ -2355,7 +2358,7 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
               <span style="font-size:11px;color:#777;border:1px solid #ddd;border-radius:6px;padding:2px 6px;white-space:nowrap">기준표 {{ it.img }}</span>
             </sc-if>
             <sc-if value="{{ it.hasEx }}">
-              <span style="font-size:11px;color:#777;border:1px solid #ddd;border-radius:6px;padding:2px 6px;white-space:nowrap">예시 문항</span>
+              <span style="font-size:11px;color:#777;border:1px solid #ddd;border-radius:6px;padding:2px 6px;white-space:nowrap">★ 예시 문항</span>
             </sc-if>
             <sc-if value="{{ it.isStaff }}">
               <span style="margin-left:auto;display:flex;gap:6px">
@@ -2491,20 +2494,13 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
       <div style="font-size:15px;color:#333;line-height:1.7;white-space:pre-wrap;text-wrap:pretty">{{ detail.longText }}</div>
       <sc-if value="{{ detail.hasEx }}">
         <div data-testid="detail-ex" style="display:flex;flex-direction:column;gap:8px">
-          <div style="font-size:14px;font-weight:700">예시 문항</div>
+          <div style="font-size:14px;font-weight:700">★ 예시 문항</div>
+          <div data-testid="ex-warn" style="display:flex;gap:8px;align-items:flex-start;background:#fff6e0;border:1px solid #f2d27a;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.55;color:#7a5600">
+            <span style="font-size:15px;line-height:1.3;flex:none">⚠</span>
+            <span><b>참고용이에요.</b> 정답이 아닐 수 있으니 그대로 따라 쓰지 말고, 내 생각으로 준비하세요.</span>
+          </div>
           <sc-if value="{{ detail.hasExText }}">
             <div style="font-size:15px;color:#333;line-height:1.7;white-space:pre-wrap;text-wrap:pretty;background:#f6f6f6;border-radius:12px;padding:12px 14px">{{ detail.examples }}</div>
-          </sc-if>
-          <sc-if value="{{ detailExLoading }}">
-            <div style="height:120px;border-radius:12px;background:#f3f3f3;display:flex;align-items:center;justify-content:center;font-size:13px;color:#999">사진 불러오는 중…</div>
-          </sc-if>
-          <sc-for list="{{ detailExImgs }}" as="im">
-            <button sc-camel-on-click="{{ im.onOpen }}" style="border:1px solid #eee;border-radius:12px;padding:0;background:#fafafa;cursor:zoom-in;overflow:hidden;display:block;width:100%">
-              <img src="{{ im.src }}" alt="예시 문항" style="display:block;width:100%;height:auto">
-            </button>
-          </sc-for>
-          <sc-if value="{{ detail.hasExImg }}">
-            <div style="font-size:12px;color:#999">사진을 누르면 크게 볼 수 있어요</div>
           </sc-if>
         </div>
       </sc-if>
@@ -2554,25 +2550,9 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
         <textarea value="{{ form.detail }}" sc-camel-on-change="{{ onDetailText }}" rows="5" placeholder="평가 범위, 준비물, 평가 기준, 배점 등" style="border:1px solid #ddd;border-radius:12px;padding:12px 14px;font-size:16px;color:#111;resize:none"></textarea>
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#555">예시 문항
+        <span style="font-size:12px;color:#a07400">★ 학생 화면에 "정답이 아닐 수 있으니 따라 쓰지 말 것" 주의 표시가 함께 보여요</span>
         <textarea data-testid="ex-text" value="{{ form.examples }}" sc-camel-on-change="{{ onExamples }}" rows="4" placeholder="선생님이 알려준 예시 문항을 적어요. 한 줄에 하나씩 적으면 보기 좋아요" style="border:1px solid #ddd;border-radius:12px;padding:12px 14px;font-size:16px;color:#111;resize:none"></textarea>
       </label>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="font-size:13px;color:#555">예시 문항 사진 · {{ formExCount }}/5</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <sc-for list="{{ formExImgs }}" as="fi">
-            <span style="position:relative;width:76px;height:76px;border-radius:10px;overflow:hidden;border:1px solid #e6e6e6;background:#f5f5f5;flex:none">
-              <img src="{{ fi.src }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
-              <button sc-camel-on-click="{{ fi.onRemove }}" aria-label="사진 빼기" style="position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;border:none;background:rgba(0,0,0,.65);color:#fff;font-size:13px;line-height:24px;padding:0;cursor:pointer">✕</button>
-            </span>
-          </sc-for>
-          <sc-if value="{{ canAddEx }}">
-            <label style="width:76px;height:76px;border-radius:10px;border:1.5px dashed #bbb;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;color:#777;cursor:pointer;flex:none">
-              <span style="font-size:22px;line-height:1">+</span>{{ exPickLabel }}
-              <input data-testid="ex-file" type="file" accept="image/*" sc-camel-on-change="{{ onPickEx }}" style="display:none">
-            </label>
-          </sc-if>
-        </div>
-      </div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <div style="font-size:13px;color:#555">평가기준표 사진 · {{ formImgCount }}/5</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -2987,17 +2967,19 @@ class Component extends DCLogic {
     }
     const deco = (it, idx = 0) => {
       const d = parse(it.date); const c = subjColor(it.subject); const isDone = !!done[it.id];
-      const exText = (it.examples || '').trim(); const hasEx = !!exText || (it.eximg || 0) > 0;
+      const exText = (it.examples || '').trim(); const hasEx = !!exText;
       return {
         ...it, dday: this.dday(it.date), isDone, notDone: !isDone, isStaff, color: c, delay: `${Math.min(idx, 10) * 50}ms`,
         op: 1, cardOp: isDone ? 0.65 : 1, rowOp: 1,
         innerBg: isDone ? accent : '#f0f0f0', innerColor: isDone ? '#fff' : '#111', subjLabelColor: isDone ? '#999' : '#333',
-        hasImg: !!it.img, hasEx, hasExText: !!exText, hasExImg: (it.eximg || 0) > 0, examples: exText,
+        hasImg: !!it.img, hasEx, hasExText: !!exText, hasExImg: false, examples: exText,
         imgNote: (it.img ? ` · 기준표 ${it.img}장` : '') + (hasEx ? ' · 예시 문항' : ''),
         dateLabel: `${d.getMonth() + 1}월 ${d.getDate()}일 (${WD[d.getDay()]})`,
         longText: it.detail || it.desc || '자세한 설명이 없어요',
         doneBg: isDone ? accent : '#fff', doneColor: isDone ? '#fff' : accent,
         doneLabel: isDone ? '✓ 준비 완료' : '준비 완료 체크하기',
+        pillLabel: isDone ? '체크 해제' : '완료 체크', pillAria: `${it.subject} ${isDone ? '준비 완료 해제' : '준비 완료 체크'}`,
+        pillBg: isDone ? '#fff' : accent, pillColor: isDone ? '#888' : '#fff', pillBorder: isDone ? '#ddd' : accent,
         ring: isDone ? accent : c,
         ringAnim: !isDone && it.date >= today && parse(it.date) - parse(today) <= 86400000 ? 'ringPulse 1.8s ease-out infinite' : 'none',
         doneAnim: isDone ? 'donePop .45s ease' : 'none',
@@ -3110,7 +3092,7 @@ class Component extends DCLogic {
       hasToast: !!s.toast, toast: s.toast,
       detailOpen: !!detailItem, detail: detailItem ? deco(detailItem) : {},
       detailImgLoading: !!(detailItem && detailItem.img && !dImgFresh),
-      detailExLoading: !!(detailItem && detailItem.eximg && !dImgFresh),
+      detailExLoading: false,
       detailImgs: viewImgs('rubric'), detailExImgs: viewImgs('example'),
       closeDetail: () => this.setState({ detailId: null }),
       sheetOpen: s.sheet, form: f,
