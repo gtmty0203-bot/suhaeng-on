@@ -3070,7 +3070,7 @@ class Component extends DCLogic {
   makeCommon(it) {
     const cls = this.className(it.class_id ?? this.state.classId) || '이 반';
     const linked = it.source_id && this.state.commons.some(c => c.id === it.source_id);
-    const text = `${cls} 일정은 그대로 남고, 같은 내용과 평가기준표 사진이 공통 일정으로 복사돼요. 다른 반 관리자가 가져가서 날짜만 고쳐 쓸 수 있어요.`
+    const text = `${cls} 일정은 그대로 남고, 같은 내용과 평가기준표 사진이 공통 일정으로 복사돼요. 날짜는 반마다 다르니 비워서(날짜 미정) 올라가고, 다른 반 관리자가 가져갈 때 자기 반 날짜를 넣어요.`
       + (linked ? ' 이 일정은 이미 공통 일정과 연결돼 있어서, 공통 일정이 하나 더 생겨요.' : '');
     this.askConfirm(`'${it.title}'을(를) 공통 일정으로 올릴까요?`, text, '공통 일정으로', async () => {
       const r = await this.call('app_make_common', { p_item_id: it.id }, '공통 일정에 올렸어요 · 전체 일정 → 공통 일정에서 볼 수 있어요');

@@ -2,7 +2,8 @@
 --
 -- app_make_common(token, item_id)
 --   * 최고관리자만 쓸 수 있다
---   * 반 일정(class_id 있음)을 그대로 복사해서 공통 일정(class_id null)을 새로 만든다. 날짜·사진도 같이 복사
+--   * 반 일정(class_id 있음)을 복사해서 공통 일정(class_id null)을 새로 만든다. 사진도 같이 복사
+--   * 날짜는 반마다 다르니 비워서 올린다(날짜 미정). 원래 반 일정의 날짜는 그대로
 --   * 원래 반 일정은 지우지 않는다 (그 반 학생들의 준비 체크 기록이 그대로 남도록)
 --   * 원래 반 일정의 source_id를 새 공통 일정으로 바꿔, 그 반에는 "✓ 가져옴"으로 보인다
 --   * 새 공통 일정 id를 돌려준다
@@ -22,7 +23,7 @@ begin
     raise exception 'already_common' using errcode = 'P0001';
   end if;
   insert into public.app_items(subject, title, date, descr, detail, examples, created_by, class_id, source_id)
-  values (src.subject, src.title, src.date, src.descr, src.detail, coalesce(src.examples, ''), a.id, null, null)
+  values (src.subject, src.title, null, src.descr, src.detail, coalesce(src.examples, ''), a.id, null, null)
   returning id into new_id;
   insert into public.app_images(item_id, data, kind, created_by)
   select new_id, g.data, g.kind, a.id
