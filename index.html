@@ -2614,6 +2614,9 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
       <sc-if value="{{ detail.isCommon }}">
         <button data-testid="detail-import" sc-camel-on-click="{{ detail.onImport }}" style="height:52px;border-radius:14px;border:1px solid {{ accent }};background:{{ accent }};color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:transform .15s" style-active="transform:scale(.96)">{{ detail.importLongLabel }}</button>
       </sc-if>
+      <sc-if value="{{ detail.canMakeCommon }}">
+        <button data-testid="detail-make-common" sc-camel-on-click="{{ detail.onMakeCommon }}" style="height:46px;border-radius:12px;border:1px solid {{ accent }};background:#fff;color:{{ accent }};font-size:14px;font-weight:700;cursor:pointer;transition:transform .15s" style-active="transform:scale(.96)">공통 일정으로 올리기</button>
+      </sc-if>
       <sc-if value="{{ detail.canEdit }}">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <button sc-camel-on-click="{{ detail.onEdit }}" style="height:46px;border-radius:12px;border:1px solid #ddd;background:#fff;font-size:14px;font-weight:600;cursor:pointer">수정하기</button>
@@ -2742,7 +2745,7 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
       <div style="font-size:14px;color:#666;line-height:1.5;text-wrap:pretty">{{ confirmText }}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
         <button sc-camel-on-click="{{ closeConfirm }}" style="height:48px;border:none;border-radius:12px;background:#f0f0f0;font-size:15px;font-weight:600;cursor:pointer">취소</button>
-        <button sc-camel-on-click="{{ okConfirm }}" style="height:48px;border:none;border-radius:12px;background:#E5533D;color:#fff;font-size:15px;font-weight:700;cursor:pointer">{{ confirmOk }}</button>
+        <button sc-camel-on-click="{{ okConfirm }}" style="height:48px;border:none;border-radius:12px;background:{{ confirmBg }};color:#fff;font-size:15px;font-weight:700;cursor:pointer">{{ confirmOk }}</button>
       </div>
     </div>
     </div>
@@ -2805,6 +2808,7 @@ const ERR_MSG = {
   admin_only: '반 관리자만 할 수 있어요',
   class_required: '반을 먼저 골라주세요',
   date_required: '날짜를 정해주세요',
+  already_common: '이미 공통 일정이에요',
   class_not_empty: '이 반에 계정이 남아 있어요. 다른 반으로 옮기거나 삭제한 뒤 지워주세요',
   class_name_taken: '이미 있는 반 이름이에요',
   bad_class: '반 이름은 1~30자로 적어주세요',
@@ -3062,7 +3066,17 @@ class Component extends DCLogic {
     this.showToast(failed ? `일정은 저장했지만 사진 ${failed}장은 처리하지 못했어요` : okMsg);
     this.refresh();
   }
-  askConfirm(title, text, ok, onOk) { this.setState({ confirm: { title, text, ok, onOk } }); }
+  askConfirm(title, text, ok, onOk, safe = false) { this.setState({ confirm: { title, text, ok, onOk, safe } }); }
+  makeCommon(it) {
+    const cls = this.className(it.class_id ?? this.state.classId) || '이 반';
+    const linked = it.source_id && this.state.commons.some(c => c.id === it.source_id);
+    const text = `${cls} 일정은 그대로 남고, 같은 내용과 평가기준표 사진이 공통 일정으로 복사돼요. 다른 반 관리자가 가져가서 날짜만 고쳐 쓸 수 있어요.`
+      + (linked ? ' 이 일정은 이미 공통 일정과 연결돼 있어서, 공통 일정이 하나 더 생겨요.' : '');
+    this.askConfirm(`'${it.title}'을(를) 공통 일정으로 올릴까요?`, text, '공통 일정으로', async () => {
+      const r = await this.call('app_make_common', { p_item_id: it.id }, '공통 일정에 올렸어요 · 전체 일정 → 공통 일정에서 볼 수 있어요');
+      if (r) this.setState({ detailId: null });
+    }, true);
+  }
   deleteItem(it) {
     const text = it.common ? '각 반이 이미 가져간 일정은 그대로 남아요.' : '학생들 달력에서도 바로 사라져요.';
     this.askConfirm(`'${it.title}' 일정을 삭제할까요?`, text, '삭제', () => {
@@ -3197,6 +3211,8 @@ class Component extends DCLogic {
         importLongLabel: it.imported ? '다시 가져오기 (이미 가져온 일정이에요)' : '우리 반으로 가져오기',
         importBg: it.imported ? '#fff' : accent, importColor: it.imported ? accent : '#fff',
         onImport: () => this.openImport(it),
+        canMakeCommon: isSuper && !isCommon,
+        onMakeCommon: () => this.makeCommon(it),
         op: 1, cardOp: isDone ? 0.65 : 1, rowOp: 1,
         innerBg: isDone ? accent : '#f0f0f0', innerColor: isDone ? '#fff' : '#111', subjLabelColor: isDone ? '#999' : '#333',
         hasImg: !!it.img, hasEx, hasExText: !!exText, hasExImg: false, examples: exText,
@@ -3392,7 +3408,7 @@ class Component extends DCLogic {
       moveNote: mv ? `지금은 ${curClassName}이에요.${mv.role === 'manager' ? ' 반 관리자는 옮기면 그 반의 학생이 돼요.' : ''} 준비 체크 기록은 그대로 남아요.` : '',
       moveTargets: mv ? s.classes.filter(c => c.id !== s.classId).map(c => ({ key: c.id, name: c.name, onClick: () => this.moveAccount(mv, c) })) : [],
       closeMove: () => this.setState({ move: null }),
-      confirmOpen: !!s.confirm, confirmTitle: s.confirm ? s.confirm.title : '', confirmText: s.confirm ? s.confirm.text : '', confirmOk: s.confirm ? s.confirm.ok : '',
+      confirmOpen: !!s.confirm, confirmTitle: s.confirm ? s.confirm.title : '', confirmText: s.confirm ? s.confirm.text : '', confirmOk: s.confirm ? s.confirm.ok : '', confirmBg: s.confirm && s.confirm.safe ? accent : '#E5533D',
       closeConfirm: () => this.setState({ confirm: null }),
       okConfirm: () => { const c = s.confirm; this.setState({ confirm: null }); if (c) c.onOk(); },
       viewerOpen: !!s.viewer, viewerSrc: s.viewer || '', viewerWidth: s.zoom ? '250%' : '100%', viewerAlign: s.zoom ? 'flex-start' : 'center',
