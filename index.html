@@ -2777,7 +2777,22 @@ const FONTS = {
 };
 const BGS = { '흰색': '#ffffff', '따뜻한 흰색': '#fbf9f5', '차가운 흰색': '#f6f8fb' };
 const SUBJECT_COLORS = { '국어': '#E5533D', '수학': '#2F6FED', '영어': '#1A9E6A', '과학': '#7A5AF8', '사회': '#D9822B', '음악': '#D6479B', '미술': '#0E9BB0', '체육': '#5E8C1F', '역사': '#9A6B3F', '기술': '#5B6B7F', '가정': '#C9564F', '정보': '#3B5BDB' };
-const subjColor = s => SUBJECT_COLORS[(s || '').trim()] || '#111111';
+const SUBJECT_KEYWORDS = [
+  ['한국사', '역사'], ['역사', '역사'],
+  ['국어', '국어'], ['문학', '국어'], ['독서', '국어'], ['화법', '국어'], ['작문', '국어'], ['언어와', '국어'],
+  ['수학', '수학'], ['대수', '수학'], ['미적분', '수학'], ['기하', '수학'], ['확률', '수학'],
+  ['영어', '영어'],
+  ['과학', '과학'], ['물리', '과학'], ['화학', '과학'], ['생명', '과학'], ['지구', '과학'],
+  ['사회', '사회'], ['윤리', '사회'], ['지리', '사회'], ['경제', '사회'], ['정치', '사회'],
+  ['음악', '음악'], ['미술', '미술'], ['체육', '체육'], ['운동', '체육'],
+  ['기술', '기술'], ['가정', '가정'], ['정보', '정보'],
+];
+const subjColor = s => {
+  const t = (s || '').replace(/\s+/g, '');
+  if (SUBJECT_COLORS[t]) return SUBJECT_COLORS[t];
+  for (const [k, base] of SUBJECT_KEYWORDS) if (t.includes(k)) return SUBJECT_COLORS[base];
+  return '#111111';
+};
 const CONF_COLORS = ['#E5533D', '#2F6FED', '#1A9E6A', '#7A5AF8', '#F2B705', '#D6479B'];
 const SB_URL = 'https://facewpuuybgtagihporn.supabase.co';
 const SB_KEY = 'sb_publishable_Smjk_R3KfSow_eW1K7H6GQ_zHQAbR3p';
