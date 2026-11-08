@@ -2767,8 +2767,23 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
         </div>
       </div>
       <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;align-items:{{ viewerAlign }};justify-content:{{ viewerAlign }}">
-        <img src="{{ viewerSrc }}" alt="평가기준표" sc-camel-on-click="{{ toggleZoom }}" style="display:block;width:{{ viewerWidth }};max-width:none;height:auto;flex:none">
+        <img src="{{ viewerSrc }}" alt="평가기준표" sc-camel-on-click="{{ toggleZoom }}" style="display:block;width:{{ viewerWidth }};max-width:none;height:auto;flex:none;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto">
       </div>
+      <sc-if value="{{ saveHelpOpen }}">
+        <div data-testid="save-help" style="position:absolute;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom));background:#fff;color:#111;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.4)">
+          <div style="font-size:15px;font-weight:700">{{ saveHelpTitle }}</div>
+          <div style="font-size:13px;color:#444;line-height:1.6">사진을 <b>손가락으로 꾹 눌러서</b> <b>"이미지 저장"</b>(또는 "사진 앱에 저장", "이미지 다운로드")을 골라주세요.</div>
+          <sc-if value="{{ saveHelpInApp }}">
+            <div style="font-size:12px;color:#777;line-height:1.6">그래도 안 되면 카카오톡·인스타그램 같은 앱 안에서 열어서 그래요. 오른쪽 위 메뉴(⋮ 또는 ···)에서 <b>다른 브라우저로 열기</b>를 누른 뒤 다시 저장해 주세요. 새 브라우저에서는 한 번 더 로그인해야 해요.</div>
+          </sc-if>
+          <div style="display:flex;gap:8px">
+            <sc-if value="{{ saveHelpKakao }}">
+              <button data-testid="open-external" sc-camel-on-click="{{ openExternal }}" style="flex:1;height:44px;border-radius:10px;border:1px solid #111;background:#fff;color:#111;font-size:14px;font-weight:700;cursor:pointer">다른 브라우저로 열기</button>
+            </sc-if>
+            <button sc-camel-on-click="{{ closeSaveHelp }}" style="flex:1;height:44px;border-radius:10px;border:none;background:#111;color:#fff;font-size:14px;font-weight:700;cursor:pointer">확인</button>
+          </div>
+        </div>
+      </sc-if>
     </div>
   </sc-if>
 </div>
@@ -2891,7 +2906,7 @@ class Component extends DCLogic {
     const t = new Date();
     const token = loadJSON(TKEY, null);
     const me = token ? loadJSON(MKEY, null) : null;
-    this.state = { items: [], commons: [], classes: [], classId: token ? loadJSON(CKEY, null) : null, done: {}, accounts: [], me, uid: me ? me.id : null, loading: !!me, busy: false, login: { id: '', pw: '' }, loginErr: '', acc: { role: 'student', name: '', id: '', pw: '' }, y: t.getFullYear(), m: t.getMonth(), sel: ymd(t), tab: 'cal', sheet: false, detailId: null, toast: '', burst: 0, monthTick: 0, monthDir: 'L', selTick: 0, pctShown: 0, errTick: 0, form: emptyForm(ymd(t)), listMode: 'up', imgCache: {}, imgBusy: false, viewer: null, zoom: false, confirm: null, pw: null, ask: null, move: null, newClass: '' };
+    this.state = { items: [], commons: [], classes: [], classId: token ? loadJSON(CKEY, null) : null, done: {}, accounts: [], me, uid: me ? me.id : null, loading: !!me, busy: false, login: { id: '', pw: '' }, loginErr: '', acc: { role: 'student', name: '', id: '', pw: '' }, y: t.getFullYear(), m: t.getMonth(), sel: ymd(t), tab: 'cal', sheet: false, detailId: null, toast: '', burst: 0, monthTick: 0, monthDir: 'L', selTick: 0, pctShown: 0, errTick: 0, form: emptyForm(ymd(t)), listMode: 'up', imgCache: {}, imgBusy: false, viewer: null, zoom: false, confirm: null, pw: null, ask: null, move: null, newClass: '', saveHelp: null };
     this.imgReq = {};
   }
   componentDidMount() {
@@ -2955,34 +2970,41 @@ class Component extends DCLogic {
       if (history.state && history.state.suhaengDetail) { this.histSkip = true; history.back(); }
     }
   }
-  // 평가기준표 사진 저장: 휴대폰은 공유 창(→ 이미지 저장), 컴퓨터는 바로 다운로드
+  // 평가기준표 사진 저장
+  // 아이폰: 공유 창(→ 이미지 저장) / 안드로이드·컴퓨터: 바로 다운로드
+  // 카카오톡 같은 앱 안 브라우저는 파일 저장을 막아서, 꾹 눌러 저장하는 방법을 안내
   async savePhoto() {
     const src = this.state.viewer; if (!src) return;
+    const ua = navigator.userAgent || '';
+    const kakao = /KAKAOTALK/i.test(ua);
+    const inApp = kakao || /NAVER\(inapp|Instagram|FBAN|FBAV|FB_IAB|Line\/|everytimeApp|DaumApps|; wv\)/i.test(ua);
+    const help = title => this.setState({ saveHelp: { title, inApp, kakao } });
+    if (inApp) return help('이 앱 안에서는 버튼으로 저장이 안 돼요');
     const it = this.state.detailId ? this.findItem(this.state.detailId) : null;
     const base = ((it ? `${it.subject || ''} ${it.title || ''}`.trim() : '') || '수행평가').replace(/[\\/:*?"<>|]+/g, ' ').trim();
     let blob;
-    try { blob = await (await fetch(src)).blob(); } catch (e) { return this.showToast('사진을 저장하지 못했어요'); }
-    const ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-    const name = `${base} 평가기준표.${ext}`;
-    const mobile = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-    if (mobile && navigator.canShare && typeof File === 'function') {
+    try { blob = await (await fetch(src)).blob(); } catch (e) { return help('사진을 꾹 눌러서 저장해 주세요'); }
+    const type = blob.type || 'image/jpeg';
+    const name = `${base} 평가기준표.${(type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')}`;
+    const ios = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+    if (ios && navigator.canShare && typeof File === 'function') {
       try {
-        const file = new File([blob], name, { type: blob.type || 'image/jpeg' });
+        const file = new File([blob], name, { type });
         if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
-      } catch (e) { if (e && e.name === 'AbortError') return; }
+      } catch (e) { if (e && e.name === 'AbortError') return; return help('사진을 꾹 눌러서 저장해 주세요'); }
     }
     try {
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = name;
+      const a = document.createElement('a'); a.href = url; a.download = name; a.rel = 'noopener';
       document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
-      this.showToast('사진을 저장했어요');
-    } catch (e) { this.showToast('사진을 길게 눌러 저장해 주세요'); }
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      this.showToast(ios ? '파일 앱에 저장했어요 · 사진 앱에 넣으려면 사진을 꾹 누르세요' : '사진을 저장했어요 · 다운로드 폴더(갤러리)를 확인하세요');
+    } catch (e) { help('사진을 꾹 눌러서 저장해 주세요'); }
   }
   handlePop() {
     if (this.histSkip) { this.histSkip = false; return; }
     if (!this.histOn) return;
-    if (this.state.viewer) { try { history.pushState({ suhaengDetail: 1 }, ''); } catch (e) { this.histOn = false; } this.setState({ viewer: null, zoom: false }); return; }
+    if (this.state.viewer) { try { history.pushState({ suhaengDetail: 1 }, ''); } catch (e) { this.histOn = false; } this.setState({ viewer: null, zoom: false, saveHelp: null }); return; }
     this.histOn = false;
     this.setState({ detailId: null });
   }
@@ -3466,7 +3488,9 @@ class Component extends DCLogic {
       okConfirm: () => { const c = s.confirm; this.setState({ confirm: null }); if (c) c.onOk(); },
       viewerOpen: !!s.viewer, viewerSrc: s.viewer || '', viewerWidth: s.zoom ? '250%' : '100%', viewerAlign: s.zoom ? 'flex-start' : 'center',
       zoomLabel: s.zoom ? '화면에 맞추기' : '확대하기',
-      toggleZoom: () => this.setState(st => ({ zoom: !st.zoom })), closeViewer: () => this.setState({ viewer: null, zoom: false }), saveViewer: () => this.savePhoto()
+      toggleZoom: () => this.setState(st => ({ zoom: !st.zoom })), closeViewer: () => this.setState({ viewer: null, zoom: false, saveHelp: null }), saveViewer: () => this.savePhoto(),
+      saveHelpOpen: !!s.saveHelp, saveHelpTitle: s.saveHelp ? s.saveHelp.title : '', saveHelpInApp: !!(s.saveHelp && s.saveHelp.inApp), saveHelpKakao: !!(s.saveHelp && s.saveHelp.kakao),
+      closeSaveHelp: () => this.setState({ saveHelp: null }), openExternal: () => { location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href); }
     };
   }
 }
