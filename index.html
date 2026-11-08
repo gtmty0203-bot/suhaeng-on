@@ -2507,7 +2507,12 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
         </sc-if>
         <input value="{{ acc.name }}" sc-camel-on-change="{{ onAccName }}" placeholder="이름" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111;background:#fff">
         <input value="{{ acc.id }}" sc-camel-on-change="{{ onAccId }}" placeholder="{{ accIdPh }}" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111;background:#fff">
-        <input value="{{ acc.pw }}" sc-camel-on-change="{{ onAccPw }}" placeholder="초기 비밀번호 (학번과 같게)" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111;background:#fff">
+        <sc-if value="{{ accPwShow }}">
+        <input value="{{ acc.pw }}" sc-camel-on-change="{{ onAccPw }}" placeholder="초기 비밀번호" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111;background:#fff">
+        </sc-if>
+        <sc-if value="{{ accStudent }}">
+        <div data-testid="pw-is-id" style="font-size:12px;color:#555;line-height:1.5;background:#f4f4f4;border-radius:10px;padding:10px 12px">학생 계정의 처음 비밀번호는 <b style="color:#111">학번(아이디)과 똑같이</b> 만들어져요. 학생이 로그인한 뒤 직접 바꾸면 돼요.</div>
+        </sc-if>
         <button sc-camel-on-click="{{ createAcc }}" style="height:50px;border:none;border-radius:12px;background:{{ accBtnBg }};color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:transform .15s" style-active="transform:scale(.97)">계정 만들기</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px">
@@ -3200,10 +3205,10 @@ class Component extends DCLogic {
     this.setState({ busy: false, ...(ok ? { pw: null } : {}) });
   }
   async createAcc() {
-    const a = this.state.acc; const name = a.name.trim(); const id = a.id.trim(); const pw = a.pw.trim();
-    const me = this.user(); const role = (CREATABLE[me && me.role] || []).includes(a.role) ? a.role : 'student';
+    const a = this.state.acc; const name = a.name.trim(); const id = a.id.trim(); const me = this.user(); const role = (CREATABLE[me && me.role] || []).includes(a.role) ? a.role : 'student';
+    const pw = role === 'student' ? id : a.pw.trim(); // 학생: 처음 비밀번호 = 학번
     if (!name || !id || !pw) return this.showToast('이름, 아이디, 비밀번호를 모두 입력해주세요');
-    if (pw.length < 4) return this.showToast('비밀번호는 4자 이상이어야 해요');
+    if (pw.length < 4) return this.showToast(role === 'student' ? '학번은 4자리 이상이어야 해요 (비밀번호로도 쓰여요)' : '비밀번호는 4자 이상이어야 해요');
     if (this.state.accounts.some(x => x.id === id)) return this.showToast('이미 있는 아이디예요');
     if (this.state.busy) return;
     if (!this.state.classId) return this.showToast('반을 먼저 골라주세요');
@@ -3296,7 +3301,7 @@ class Component extends DCLogic {
     const valid = f.subject.trim() && f.title.trim() && (f.date || fCommon);
     const curClass = s.classes.find(c => c.id === s.classId) || null;
     const curClassName = curClass ? curClass.name : '';
-    const ac = s.acc; const accValid = ac.name.trim() && ac.id.trim() && ac.pw.trim();
+    const ac = s.acc; 
     const tabStyle = t => ({ w: tab === t ? 700 : 400, c: tab === t ? accent : '#999' });
     const tabs = isStaff ? ['cal', 'list', 'accounts'] : ['cal', 'list'];
     this.targetPct = upPct;
@@ -3392,12 +3397,12 @@ class Component extends DCLogic {
       addClass: () => this.addClass(), addClassBg: s.newClass.trim() && !s.busy ? accent : '#bbb',
       hasClass: !!s.classId, noClassForAcc: !s.classId && !s.loading,
       accListTitle: curClassName ? `${curClassName} 계정` : '계정 목록',
-      acc: ac, accIdPh: accRole === 'student' ? '아이디 (학번)' : '아이디',
+      acc: ac, accPwShow: accRole !== 'student', accStudent: accRole === 'student', accIdPh: accRole === 'student' ? '아이디 (학번)' : '아이디',
       hasRoleTabs: creatable.length > 1, roleTabN: creatable.length,
       roleTabs: creatable.map(r => ({ key: r, label: ROLE_LABEL[r], bg: accRole === r ? '#fff' : 'transparent', weight: accRole === r ? 700 : 400, onClick: () => this.setAcc('role', r) })),
       hasRoleNote: !!roleNote, roleNote,
       onAccName: e => this.setAcc('name', e.target.value), onAccId: e => this.setAcc('id', e.target.value), onAccPw: e => this.setAcc('pw', e.target.value),
-      accBtnBg: accValid ? accent : '#bbb', createAcc: () => this.createAcc(),
+      accBtnBg: ac.name.trim() && ac.id.trim() && (accRole === 'student' || ac.pw.trim()) ? accent : '#bbb', createAcc: () => this.createAcc(),
       accCount: s.accounts.length,
       accounts: s.accounts.map((a, i) => ({
         ...a, initial: a.name.slice(0, 1), roleLabel: ROLE_LABEL[a.role] || a.role, delay: `${Math.min(i, 10) * 40}ms`,
