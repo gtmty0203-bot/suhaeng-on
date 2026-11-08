@@ -2756,7 +2756,10 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
     <div style="position:fixed;inset:0;background:#000;z-index:40;display:flex;flex-direction:column;animation:dimIn .2s ease both">
       <div style="flex:none;display:flex;justify-content:space-between;align-items:center;padding:calc(10px + env(safe-area-inset-top)) 12px 10px">
         <button sc-camel-on-click="{{ toggleZoom }}" style="height:40px;padding:0 14px;border-radius:10px;border:1px solid #555;background:none;color:#fff;font-size:14px;cursor:pointer">{{ zoomLabel }}</button>
+        <div style="display:flex;gap:8px">
+        <button data-testid="save-photo" sc-camel-on-click="{{ saveViewer }}" style="height:40px;padding:0 14px;border-radius:10px;border:1px solid #555;background:none;color:#fff;font-size:14px;cursor:pointer">사진 저장</button>
         <button sc-camel-on-click="{{ closeViewer }}" style="height:40px;padding:0 14px;border-radius:10px;border:none;background:#fff;color:#111;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
+        </div>
       </div>
       <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;align-items:{{ viewerAlign }};justify-content:{{ viewerAlign }}">
         <img src="{{ viewerSrc }}" alt="평가기준표" sc-camel-on-click="{{ toggleZoom }}" style="display:block;width:{{ viewerWidth }};max-width:none;height:auto;flex:none">
@@ -2946,6 +2949,30 @@ class Component extends DCLogic {
       this.histOn = false;
       if (history.state && history.state.suhaengDetail) { this.histSkip = true; history.back(); }
     }
+  }
+  // 평가기준표 사진 저장: 휴대폰은 공유 창(→ 이미지 저장), 컴퓨터는 바로 다운로드
+  async savePhoto() {
+    const src = this.state.viewer; if (!src) return;
+    const it = this.state.detailId ? this.findItem(this.state.detailId) : null;
+    const base = ((it ? `${it.subject || ''} ${it.title || ''}`.trim() : '') || '수행평가').replace(/[\\/:*?"<>|]+/g, ' ').trim();
+    let blob;
+    try { blob = await (await fetch(src)).blob(); } catch (e) { return this.showToast('사진을 저장하지 못했어요'); }
+    const ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+    const name = `${base} 평가기준표.${ext}`;
+    const mobile = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    if (mobile && navigator.canShare && typeof File === 'function') {
+      try {
+        const file = new File([blob], name, { type: blob.type || 'image/jpeg' });
+        if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
+      } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    try {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      this.showToast('사진을 저장했어요');
+    } catch (e) { this.showToast('사진을 길게 눌러 저장해 주세요'); }
   }
   handlePop() {
     if (this.histSkip) { this.histSkip = false; return; }
@@ -3434,7 +3461,7 @@ class Component extends DCLogic {
       okConfirm: () => { const c = s.confirm; this.setState({ confirm: null }); if (c) c.onOk(); },
       viewerOpen: !!s.viewer, viewerSrc: s.viewer || '', viewerWidth: s.zoom ? '250%' : '100%', viewerAlign: s.zoom ? 'flex-start' : 'center',
       zoomLabel: s.zoom ? '화면에 맞추기' : '확대하기',
-      toggleZoom: () => this.setState(st => ({ zoom: !st.zoom })), closeViewer: () => this.setState({ viewer: null, zoom: false })
+      toggleZoom: () => this.setState(st => ({ zoom: !st.zoom })), closeViewer: () => this.setState({ viewer: null, zoom: false }), saveViewer: () => this.savePhoto()
     };
   }
 }
