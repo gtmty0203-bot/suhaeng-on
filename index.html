@@ -2263,6 +2263,7 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
         <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#555">비밀번호
           <input type="password" value="{{ login.pw }}" sc-camel-on-change="{{ onLoginPw }}" style="height:52px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111">
         </label>
+        <div data-testid="first-login-hint" style="font-size:13px;color:#555;line-height:1.6;background:#f4f4f4;border-radius:12px;padding:12px 14px">처음 로그인할 때는 <b style="color:#111">아이디와 비밀번호 모두 학번</b>이에요.<br>로그인한 뒤 위쪽 <b style="color:#111">비번 변경</b>으로 꼭 바꿔주세요.</div>
         <sc-if value="{{ hasLoginErr }}">
           <div style="font-size:13px;color:#c0392b;animation:{{ errAnim }} .4s ease">{{ loginErr }}</div>
         </sc-if>
@@ -2506,7 +2507,7 @@ body{margin:0;background:#efefef;-webkit-tap-highlight-color:transparent}*{box-s
         </sc-if>
         <input value="{{ acc.name }}" sc-camel-on-change="{{ onAccName }}" placeholder="이름" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111;background:#fff">
         <input value="{{ acc.id }}" sc-camel-on-change="{{ onAccId }}" placeholder="{{ accIdPh }}" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111;background:#fff">
-        <input value="{{ acc.pw }}" sc-camel-on-change="{{ onAccPw }}" placeholder="초기 비밀번호" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111;background:#fff">
+        <input value="{{ acc.pw }}" sc-camel-on-change="{{ onAccPw }}" placeholder="초기 비밀번호 (학번과 같게)" style="height:48px;border:1px solid #ddd;border-radius:12px;padding:0 14px;font-size:16px;color:#111;background:#fff">
         <button sc-camel-on-click="{{ createAcc }}" style="height:50px;border:none;border-radius:12px;background:{{ accBtnBg }};color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:transform .15s" style-active="transform:scale(.97)">계정 만들기</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px">
@@ -2848,6 +2849,8 @@ async function rpc(fn, args) {
   return body;
 }
 const errText = e => ERR_MSG[e && e.code] || (e && e.code === 'network' ? '서버에 연결하지 못했어요. 잠시 후 다시 시도해주세요' : '문제가 생겼어요. 잠시 후 다시 시도해주세요');
+// 반 이름 숫자 순서 정렬: 1학년 1반, 2반 … 10반
+function sortClasses(a) { return [...a].sort((x, y) => String(x.name).localeCompare(String(y.name), 'ko', { numeric: true })); }
 function loadJSON(k, fb) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; } catch (e) { return fb; } }
 function saveJSON(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage blocked */ } }
 // Shrinks a phone photo to a JPEG data URL small enough to store (text on a rubric stays readable at ~1800px).
@@ -2884,6 +2887,8 @@ class Component extends DCLogic {
     this.imgReq = {};
   }
   componentDidMount() {
+    this.onPop = () => this.handlePop();
+    window.addEventListener('popstate', this.onPop);
     this.onVisible = () => { if (document.visibilityState === 'visible') this.refresh(); };
     this.onStorage = e => { if (e.key === TKEY && !e.newValue) this.clearSession(); };
     document.addEventListener('visibilitychange', this.onVisible);
@@ -2908,7 +2913,7 @@ class Component extends DCLogic {
       const mine = {}; (st.done || []).forEach(id => (mine[id] = true));
       saveJSON(MKEY, st.user);
       if (st.user.role === 'superadmin') saveJSON(CKEY, st.class_id ?? null);
-      this.setState({ me: st.user, uid: st.user.id, items: st.items || [], commons: st.commons || [], classes: st.classes || [], classId: st.class_id ?? null, done: { [st.user.id]: mine }, accounts: st.accounts || [], loading: false });
+      this.setState({ me: st.user, uid: st.user.id, items: st.items || [], commons: st.commons || [], classes: sortClasses(st.classes || []), classId: st.class_id ?? null, done: { [st.user.id]: mine }, accounts: st.accounts || [], loading: false });
     } catch (e) {
       if (e.code === 'session_expired') this.clearSession('다시 로그인해주세요');
       else { this.setState({ loading: false }); if (e.code !== 'network' || !this.netWarned) this.showToast(errText(e)); this.netWarned = e.code === 'network'; }
@@ -2919,7 +2924,7 @@ class Component extends DCLogic {
     catch (e) { if (e.code === 'session_expired') this.clearSession('다시 로그인해주세요'); else this.showToast(errText(e)); return false; }
     finally { this.refresh(); }
   }
-  componentDidUpdate() { this.countUp(); this.ensureDetailImages(); }
+  componentDidUpdate() { this.countUp(); this.ensureDetailImages(); this.syncHistory(); }
   countUp() {
     const target = this.targetPct ?? 0;
     if (this.animTo === target) return;
@@ -2933,7 +2938,23 @@ class Component extends DCLogic {
     };
     this.raf = requestAnimationFrame(step);
   }
-  componentWillUnmount() { document.removeEventListener('visibilitychange', this.onVisible); window.removeEventListener('storage', this.onStorage); clearInterval(this.poll); clearTimeout(this.tt); clearTimeout(this.bt); cancelAnimationFrame(this.raf); }
+  // 상세 화면을 열면 뒤로가기 기록을 하나 넣어서, 휴대폰 뒤로가기 = 닫기 버튼
+  syncHistory() {
+    const open = !!this.state.detailId;
+    if (open && !this.histOn) { try { history.pushState({ suhaengDetail: 1 }, ''); this.histOn = true; } catch (e) {} }
+    else if (!open && this.histOn) {
+      this.histOn = false;
+      if (history.state && history.state.suhaengDetail) { this.histSkip = true; history.back(); }
+    }
+  }
+  handlePop() {
+    if (this.histSkip) { this.histSkip = false; return; }
+    if (!this.histOn) return;
+    if (this.state.viewer) { try { history.pushState({ suhaengDetail: 1 }, ''); } catch (e) { this.histOn = false; } this.setState({ viewer: null, zoom: false }); return; }
+    this.histOn = false;
+    this.setState({ detailId: null });
+  }
+  componentWillUnmount() { window.removeEventListener('popstate', this.onPop); document.removeEventListener('visibilitychange', this.onVisible); window.removeEventListener('storage', this.onStorage); clearInterval(this.poll); clearTimeout(this.tt); clearTimeout(this.bt); cancelAnimationFrame(this.raf); }
   loginFail(msg) { this.setState(s => ({ loginErr: msg, errTick: s.errTick + 1 })); }
   showToast(msg) { clearTimeout(this.tt); this.setState({ toast: '' }, () => this.setState({ toast: msg })); this.tt = setTimeout(() => this.setState({ toast: '' }), 2400); }
   user() { return this.state.me; }
